@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+    <html><head>
+    <meta charset='utf-8'>
+
+    <script src='http://maps.secondlife.com/_scripts/sl.mapapi2.js'></script>
+    <link rel='stylesheet' type='text/css' href='http://maps.secondlife.com/_styles/sl.mapapi2.css'>
+
+    <style>
+    div#both {
+        marging: 0px;
+        padding: 0px;
+        background-color: black;
+        
+    }
+    div#map-container {
+        width: 1500px;//492px;   
+        height: 1000px;//1016px; 
+        //border:4px solid black;
+        padding: 8px 8px 8px 16px;
+        display: inline-block;
+        //background-color: black;
+        float: left;
+        position: absolute;
+         
+    }
+    div#map-container2 {
+        width: 500px; //492px;
+        height: 500px; 
+        //border:4px solid black;
+        padding: 8px 16px 8px 8px;
+        display: inline-block;
+        float: right;
+        //background-color: black;
+        position: relative;
+    }
+    body {
+        margin: 0px;
+        border:0px;
+        background-color: white;// black;
+    }
+    </style>
+ 
+    <script>
+    function loadmap() {
+        var lmap = new SLMap(document.getElementById('map-container'));
+        var latlng = L.latLng(1000,1000);
+        lmap.setView(latlng, 7);
+        
+        var lmap2 = new SLMap(document.getElementById('map-container2'));
+        lmap2.setView(latlng, 2); 
+        //lmap2.doubleClickZoom('false');
+        
+        var region_route = L.polygon([
+            [latlng.lat, latlng.lng], 
+            [latlng.lat, latlng.lng+1],
+            [latlng.lat+1, latlng.lng+1],
+            [latlng.lat+1, latlng.lng]
+        ], {
+            color: 'lightgreen', 
+            fillColor: 'lightgreen',
+            fillOpacity: 0.5,
+        }).addTo(lmap);
+        
+        var region_route2 = L.polygon([
+            [latlng.lat, latlng.lng], 
+            [latlng.lat, latlng.lng+1],
+            [latlng.lat+1, latlng.lng+1],
+            [latlng.lat+1, latlng.lng]
+        ], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+        }).addTo(lmap2);
+        
+        const popup = L.popup()
+            .setLatLng([latlng.lat+0.5,latlng.lng+0.5])
+            .setContent('Starting point.')
+            .openOn(lmap2);
+            
+        function onMapClick(e) {
+            popup
+                .setLatLng(e.latlng) 
+                .setContent(`You clicked the map at ${e.latlng.toString()}`)
+                .openOn(lmap);
+        }
+
+        lmap.on('click', onMapClick);
+    }
+
+    function mark_waypoint() {
+        //lmap2.dblclick
+    }
+    </script>
+
+    </head><body onload='loadmap()'>
+    
+
+    <div id='map-container'></div>
+    <div id='map-container2'></div>
+    <label for='name'>Name (4 to 8 characters):</label>
+    <input type='text' id='search' name='search' required minlength='4' />
+    <label>
+      Please choose one or more pets:
+      <select name='pets' multiple size='10'>
+        <optgroup label='4-legged pets'>
+          <option value='dog'>Dog</option>
+          <option value='cat'>Cat</option>
+          <option value='hamster' disabled>Hamster</option>
+        </optgroup>
+        <optgroup label='Flying pets'>
+          <option value='parrot'>Parrot</option>
+          <option value='macaw'>Macaw</option>
+          <option value='albatross'>Albatross</option>
+        </optgroup>
+      </select>
+    </label>
+        
+    </body></html>
