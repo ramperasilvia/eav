@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+    <html><head>
+    <meta charset='utf-8'>
+
+    <script src='http://maps.secondlife.com/_scripts/sl.mapapi2.js'></script>
+    <link rel='stylesheet' type='text/css' href='http://maps.secondlife.com/_styles/sl.mapapi2.css'>
+
+    <style>
+    div#map-container {
+        width: 1000px;
+        height: 1000px;
+    }
+    </style>
+
+    <script>
+    function loadmap() {
+        var lmap = new SLMap(document.getElementById('map-container'));
+        lmap.setView([1002, 997], 4);
+    }
+    </script>
+
+    </head><body onload='loadmap()'>
+
+    <div id='map-container'></div>
+
+    </body></html>
