@@ -21,3 +21,75 @@ extra
       </select>
     </label>
 	</div>
+	
+	
+	
+	
+https://wiki.secondlife.com/w/index.php?title=Linden_Lab_Official:Map_API_Reference	
+	
+Region name from global coordinates
+https://cap.secondlife.com/cap/0/b713fe80-283b-4585-af4d-a3b7d9a32492?var=varName&grid_x=xcoord&grid_y=ycoord
+
+Global coordinates from region name
+https://cap.secondlife.com/cap/0/d661249b-2b5a-4436-966a-3d3b8d7a574f?var=varName&sim_name=RegionName
+	
+	
+	
+	
+	
+	https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Network_requests
+
+fetch("products.json")
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then((json) => initialize(json))
+  .catch((err) => console.error(`Fetch problem: ${err.message}`));
+
+fetch(url)
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    return response.blob();
+  })
+  .then((blob) => showProduct(blob, product))
+  .catch((err) => console.error(`Fetch problem: ${err.message}`));
+  
+  
+  
+https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/JSON
+
+async function populate() {
+  const requestURL =
+    "https://cap.secondlife.com/cap/0/b713fe80-283b-4585-af4d-a3b7d9a32492?var=region&grid_x=1000&grid_y=1000";
+  const request = new Request(requestURL);
+
+  const response = await fetch(request);
+  const region_name = await response.json();
+
+  region_name;
+
+
+////
+  populateHeroes(region_name);
+}
+
+
+function populateHeroes(obj) {
+  const heroes = obj.members;
+  myH2.textContent = hero.name;
+  
+  obj; (para nome, verificar o var region='Da Boom';)
+  
+  ///
+  obj.x;
+  obj.y;
+  
+	
+	
+	
+	https://stackoverflow.com/questions/68134697/how-to-pass-return-passed-data-back-into-a-component-to-display-in-html

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+    <html><head>
+    <meta charset='utf-8'>
+	
+	<script>
+	function loadjson() {
+		fetch("https://cap.secondlife.com/cap/0/b713fe80-283b-4585-af4d-a3b7d9a32492?var=region&grid_x=1000&grid_y=1000")
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error(`HTTP error: ${response.status}`);
+			}
+			return response.json();
+		})
+		.then((json) => initialize(json))
+		.catch((err) => console.error(`Fetch problem: ${err.message}`));
+		
+	}
+	
+	</script>
+
+    </head><body onload='loadjson()'>
+	<h1>response</h1>
+	</body></html>
