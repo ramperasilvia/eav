@@ -102,6 +102,9 @@
                 .setLatLng(e.latlng) 
                 .setContent(`You clicked the map at ${e.latlng.toString()}`)
                 .openOn(lmap);
+			
+			//const data = "someValue";
+			//window.location.href = `next-page.html?myParam=${data}`;
         }
 
         lmap.on('click', onMapClick);
@@ -116,27 +119,5 @@
     
     <div id='map-container'></div>
     <div id='map-container2'></div>
-	
-	<div id='search-box'>
-    <label for='search-label'>Search a new waypoint:</br></label>
-    <input type='text' id='search' name='search' required minlength='4' />
-    </div>
-	<div id='waypoint-list-box'>
-	<label>
-      Waypoints:
-      <select name='pets' multiple size='10'>
-        <optgroup label='4-legged pets'>
-          <option value='dog'>Dog</option>
-          <option value='cat'>Cat</option>
-          <option value='hamster' disabled>Hamster</option>
-        </optgroup>
-        <optgroup label='Flying pets'>
-          <option value='parrot'>Parrot</option>
-          <option value='macaw'>Macaw</option>
-          <option value='albatross'>Albatross</option>
-        </optgroup>
-      </select>
-    </label>
-	</div>
-        
+	        
     </body></html>
