@@ -71,7 +71,7 @@ async function populate() {
   const response = await fetch(request);
   const region_name = await response.json();
 
-  region_name;
+  = region_name;
 
 
 ////
