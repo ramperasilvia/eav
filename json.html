@@ -3,6 +3,18 @@
     <meta charset='utf-8'>
 	
 	<script>
+	
+	async function populate() {
+	  const requestURL =
+		"https://cap.secondlife.com/cap/0/b713fe80-283b-4585-af4d-a3b7d9a32492?var=region&grid_x=1000&grid_y=1000";
+	  const request = new Request(requestURL);
+
+	  const response = await fetch(request);
+	  const region_name = await response.json();
+
+	  console.error(region_name);
+	 }
+	
 	function loadjson() {
 		fetch("https://cap.secondlife.com/cap/0/b713fe80-283b-4585-af4d-a3b7d9a32492?var=region&grid_x=1000&grid_y=1000")
 		.then((response) => {
@@ -18,6 +30,6 @@
 	
 	</script>
 
-    </head><body onload='loadjson()'>
+    </head><body onload='populate()'>
 	<h1>loadjson()</h1>
 	</body></html>
