@@ -9,7 +9,7 @@
 			if (!response.ok) {
 				throw new Error(`HTTP error: ${response.status}`);
 			}
-			return response.json();
+			console.error(response.json());
 		})
 		.then((json) => initialize(json))
 		.catch((err) => console.error(`Fetch problem: ${err.message}`));
