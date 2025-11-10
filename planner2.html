@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+    <html><head>
+    <meta charset='utf-8'>
+
+    <script src='sl.mapapi2.js'></script>
+    <link rel='stylesheet' type='text/css' href='sl.mapapi2.css'>
+
+<script>
+    function loadmap() {
+        var lmap = new SLMap(document.getElementById('map-container'));
+        var latlng = L.latLng(1000,1000);
+        lmap.setView(latlng, 7);
+        
+        var lmap2 = new SLMap(document.getElementById('map-container2'));
+        lmap2.setView(latlng, 2); 
+        //lmap2.doubleClickZoom('false');
+        
+        var region_route = L.polygon([
+            [latlng.lat, latlng.lng], 
+            [latlng.lat, latlng.lng+1],
+            [latlng.lat+1, latlng.lng+1],
+            [latlng.lat+1, latlng.lng]
+        ], {
+            color: 'lightgreen', 
+            fillColor: 'lightgreen',
+            fillOpacity: 0.5,
+        }).addTo(lmap);
+        
+        var region_route2 = L.polygon([
+            [latlng.lat, latlng.lng], 
+            [latlng.lat, latlng.lng+1],
+            [latlng.lat+1, latlng.lng+1],
+            [latlng.lat+1, latlng.lng]
+        ], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+        }).addTo(lmap2);
+        
+        const popup = L.popup()
+            .setLatLng([latlng.lat+0.5,latlng.lng+0.5])
+            .setContent('Starting point.')
+            .openOn(lmap2);
+            
+        function onMapClick(e) {
+            popup
+                .setLatLng(e.latlng) 
+                .setContent(`You clicked the map at ${e.latlng.toString()}`)
+                .openOn(lmap);
+			
+			//const data = "someValue";
+			//window.location.href = `next-page.html?myParam=${data}`;
+        }
+
+        lmap.on('click', onMapClick);
+    }
+	
+	function mark_waypoint() {
+        //lmap2.dblclick
+    }
+	
+    </script>
+
+    <style>
+    div#both {
+        marging: 0px;
+        padding: 0px;
+        background-color: black;
+    }
+    div#map-container {
+        width: 1500px;//492px;   
+        height: 1000px;//1016px; 
+        border:4px solid black;
+        padding: 8px 8px 8px 16px;
+        display: inline-block;
+        //background-color: black;
+        float: left;
+        position: absolute;
+         
+    }
+    div#left-side {
+        width: 500px; //492px;
+        height: 500px; 
+        border:4px solid black;
+        padding: 8px 16px 8px 8px;
+        display: inline-block;
+        float: right;
+        //background-color: black;
+        position: relative;
+    }
+    div#2-columns {
+        //width: 500px; //492px;
+        //height: 500px; 
+        border:4px solid black;
+        //padding: 8px 16px 8px 8px;
+        display: inline-block;
+        //float: right;
+        //background-color: black;
+        //position: relative;
+    }
+    div#map-container2 {
+        width: 500px; //492px;
+        height: 500px; 
+        border:4px solid black;
+        padding: 8px 16px 8px 8px;
+        display: inline-block;
+        float: right;
+        //background-color: black;
+        position: relative;
+    }
+    div#search-box {
+        width: 240px; //492px;
+        //height: 500px; 
+        border:4px solid black;
+        padding: 8px 16px 8px 8px;
+        display: inline-grid;
+        float: right;
+        //background-color: black;
+        position: relative;
+    }
+    div#wp_boxes {
+        display:list-item;
+    }
+    div#waypoint-list-box {
+        width: 240px; //492px;
+        //height: 500px; 
+        border:4px solid black;
+        padding: 8px 16px 8px 8px;
+        display: inline-grid;
+        float: right;
+        //background-color: black;
+        position: relative;
+    }
+    body {
+        margin: 0px;
+        border:0px;
+        background-color: white;// black;
+    }
+    </style>
+
+    </head><body>
+    
+    <div id='map-container'></div>
+    <div id='left-side'>
+
+        <div id='map-container2'></div>
+        
+        <div id='2-columns'>
+
+            <div id='search-box'>
+                <label for='search-label'>Search waypoint by coords:</br></label>
+                <div id='wp_boxes'>
+                    <input type='text' id='search' name='x' required minlength='3' style='width:90px' display='inline-flex' />
+                    <input type='text' id='search' name='y' required minlength='3' style='width:90px' />
+                    <button type="button" onclick="alert('Hello World!')">Go!</button> 
+                </div>
+            </div>
+
+            <div id='waypoint-list-box'>
+                <label>Waypoints:</label>
+                <select name='pets' multiple size='17'>
+                    <option value='dog'>Dog</option>
+                    <option value='cat'>Cat</option>
+                    <option value='hamster' disabled>Hamster</option>
+                    <option value='parrot'>Parrot</option>
+                    <option value='macaw'>Macaw</option>
+                    <option value='albatross'>Albatross</option>
+                </select>
+                <button type="button"  onclick="alert('Hello World!')">Go!</button> 
+                <button type="button" onclick="alert('Hello World!')">Go!</button> 
+            </div>
+        </div>
+    </div>
+            
+    </body></html>
