@@ -88,15 +88,17 @@
         background-color: green;
         position: relative;
     }
-    div#2-columns {
-        //width: 500px; //492px;
-        //height: 500px; 
-        border:4px solid black;
-        //padding: 8px 16px 8px 8px;
+	div#columns {
+		border:4px solid black;
         display: inline-block;
-        //float: right;
-        //background-color: black;
-        //position: relative;
+	}
+    div#2-columns {
+        border:4px solid black;
+        display: inline-block;
+    }
+	div#1-columns {
+        border:4px solid black;
+        display: inline-block;
     }
     div#map-container2 {
         width: 500px; //492px;
@@ -145,31 +147,36 @@
 
         <div id='map-container2'></div>
         
-        <div id='2-columns'>
+		<div id='columns'>
+			<div id='1-columns'>
+			</div>
+			
+			<div id='2-columns'>
 
-            <div id='search-box'>
-                <label for='search-label'>Search waypoint by coords:</br></label>
-                <div id='wp_boxes'>
-                    <input type='text' id='search' name='x' required minlength='3' style='width:90px' display='inline-flex' />
-                    <input type='text' id='search' name='y' required minlength='3' style='width:90px' />
-                    <button type="button" onclick="alert('Hello World!')">Go!</button> 
-                </div>
-            </div>
+				<div id='search-box'>
+					<label for='search-label'>Search waypoint by coords:</br></label>
+					<div id='wp_boxes'>
+						<input type='text' id='search' name='x' required minlength='3' style='width:90px' display='inline-flex' />
+						<input type='text' id='search' name='y' required minlength='3' style='width:90px' />
+						<button type="button" onclick="alert('Hello World!')">Go!</button> 
+					</div>
+				</div>
 
-            <div id='waypoint-list-box'>
-                <label>Waypoints:</label>
-                <select name='pets' multiple size='17'>
-                    <option value='dog'>Dog</option>
-                    <option value='cat'>Cat</option>
-                    <option value='hamster' disabled>Hamster</option>
-                    <option value='parrot'>Parrot</option>
-                    <option value='macaw'>Macaw</option>
-                    <option value='albatross'>Albatross</option>
-                </select>
-                <button type="button"  onclick="alert('Hello World!')">Go!</button> 
-                <button type="button" onclick="alert('Hello World!')">Go!</button> 
-            </div>
-        </div>
+				<div id='waypoint-list-box'>
+					<label>Waypoints:</label>
+					<select name='pets' multiple size='17'>
+						<option value='dog'>Dog</option>
+						<option value='cat'>Cat</option>
+						<option value='hamster' disabled>Hamster</option>
+						<option value='parrot'>Parrot</option>
+						<option value='macaw'>Macaw</option>
+						<option value='albatross'>Albatross</option>
+					</select>
+					<button type="button"  onclick="alert('Hello World!')">Go!</button> 
+					<button type="button" onclick="alert('Hello World!')">Go!</button> 
+				</div>
+			</div>
+		</div>
     </div>
             
     </body></html>
