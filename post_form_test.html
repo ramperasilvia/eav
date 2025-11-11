@@ -2,6 +2,19 @@
 <html>
 <body>
 
+<?php
+    // This block of PHP code will only execute if the page is requested with a POST method.
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if (isset($_POST["username"]) && isset($_POST["lname"])) {
+            $username = htmlspecialchars($_POST["fname"]);
+            $password = htmlspecialchars($_POST["lname"]);
+            echo "<p>Welcome, " . $fname . "!</p>";
+        } else {
+            echo "<p>Please fill out all fields.</p>";
+        }
+    }
+    ?>
+
 <h2>The method Attribute</h2>
 
 <p>This form will be submitted using the POST method:</p>
