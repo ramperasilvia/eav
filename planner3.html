@@ -71,8 +71,8 @@
             const coord = coordFromUrl.split('X');
             x.value = coord[0];
             y.value = coord[1];
-            if(cText.length > 0) cText += "X";
-            cText += coord[0] +"x"+coord[1];
+            
+            cText += coord[0] +"X"+coord[1];
         }
 
         const cHiddenInput = document.getElementById("c")
