@@ -93,7 +93,8 @@
         cHiddenInput.value = cText;
 
 
-        var lmap = new SLMap(document.getElementById('map-container'));
+        var lmap = new SLMap(document.getElementById('map-container')
+							.doubleClickZoom(false));
         var latlng = L.latLng(1000,1000);
         lmap.setView(latlng, 7);
         
