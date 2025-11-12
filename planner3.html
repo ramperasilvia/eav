@@ -88,7 +88,7 @@
             
             cText += coord[0] +"X"+coord[1];
         }
-
+	
         const cHiddenInput = document.getElementById("c")
         cHiddenInput.value = cText;
 
@@ -132,19 +132,33 @@
         function onMapClick(e) {
             popup
                 .setLatLng(e.latlng) 
-                .setContent(`You clicked the map at ${e.latlng.toString()}`)
+                .setContent(`You clicked the map at ${parseInt(e.latlng).toString()}`)
                 .openOn(lmap);
             
+			
             //const data = "someValue";
             //window.location.href = `next-page.html?myParam=${data}`;
         }
 
-        lmap.on('click', onMapClick);
+        lmap.on('dblclick', onMapClick);
+		//lmap2.dblclick
+		
+		function addCoordRoute(x, y) {
+			var latlng = L.latLng(x,y);
+			var region_route = L.polygon([
+				[latlng.lat, latlng.lng], 
+				[latlng.lat, latlng.lng+1],
+				[latlng.lat+1, latlng.lng+1],
+				[latlng.lat+1, latlng.lng]
+			], {
+				color: 'lightgreen', 
+				fillColor: 'lightgreen',
+				fillOpacity: 0.5,
+			}).addTo(lmap);
+		}
     }
     
-    function mark_waypoint() {
-        //lmap2.dblclick
-    }
+    
     
     </script>
 
