@@ -34,7 +34,7 @@
             }
         }
 
-        //let rLText = "";
+		//let rLText = routeListFromUrl;
         if(routeListFromUrl) {
             const route = routeListFromUrl.split('X');
             route.forEach(coords => {
@@ -50,7 +50,7 @@
         }
 
         const rLHiddenInput = document.getElementById("rL")
-        rLHiddenInput.value = rLText;
+        rLHiddenInput.value = routeListFromUrl;
 
 
         //let wpLText = "";
@@ -69,7 +69,7 @@
         }
 
         const wpLHiddenInput = document.getElementById("wL")
-        wpLHiddenInput.value = wpLText;
+        wpLHiddenInput.value = waypointListFromUrl;
 
         let cText = "";
         if(coordFromUrl) {
