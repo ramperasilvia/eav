@@ -67,8 +67,8 @@
                 wpLSelect.appendChild(option);
 
 				const coordArr = coords.split("z");
-				routeList += coordArr[0];
-				routeList += coordArr[1];
+				waypointsList += coordArr[0];
+				waypointsList += coordArr[1];
 
                 //if(wpLText.length > 0) wpLText += "X";
                 //wpLText += coords;
@@ -109,6 +109,7 @@
             fillColor: 'lightgreen',
             fillOpacity: 0.5,
         }).addTo(lmap);
+		region_route.remove();
         
         var region_route2 = L.polygon([
             [latlng.lat, latlng.lng], 
