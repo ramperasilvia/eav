@@ -8,6 +8,9 @@
 <script>
     function loadmap() {
 
+		list routeList = [];
+		list waypointsList = [];
+
         // 1. Retrieve data from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const coordFromUrl = urlParams.get('c');
@@ -36,7 +39,8 @@
             const route = routeListFromUrl.split('X');
             route.forEach(coords => {
                 const option = document.createElement('option');
-                option.textContent = coords;
+				let textCoords = coords.replace("x",",");
+                option.textContent = textCoords;
                 option.value = coords; 
                 rLSelect.appendChild(option);
                 
