@@ -66,6 +66,10 @@
                 option.value = coords; 
                 wpLSelect.appendChild(option);
 
+				const coordArr = coords.split("z");
+				routeList += coordArr[0];
+				routeList += coordArr[1];
+
                 //if(wpLText.length > 0) wpLText += "X";
                 //wpLText += coords;
             });
