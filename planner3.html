@@ -131,8 +131,8 @@
             
         function onMapClick(e) {
             popup
-                .setLatLng(e.latlng) 
-                .setContent(`You clicked the map at ${parseInt(e.latlng).toString()}`)
+                .setLatLng(parseInt(e.latlng.lat),parseInt(e.latlng.lng)) 
+                .setContent(`You clicked the map at ${e.latlng.toString()}`)
                 .openOn(lmap);
             
 			
