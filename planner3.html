@@ -8,8 +8,10 @@
 <script>
     function loadmap() {
 
-		let routeList = [];
-		let waypointsList = [];
+		let routeListX = [];
+		let routeListY = [];
+		let waypointsListX = [];
+		let waypointsListY = [];
 
         // 1. Retrieve data from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -45,8 +47,8 @@
                 rLSelect.appendChild(option);
                 
 				const coordsArr = coords.split("z");
-				routeList += coordsArr[0];
-				routeList += coordsArr[1];
+				routeListX += coordsArr[0];
+				routeListY += coordsArr[1];
                 //if(rLText.length > 0) rLText += "X";
                 //rLText += coords;
             });
@@ -67,8 +69,8 @@
                 wpLSelect.appendChild(option);
 
 				const coordArr = coords.split("z");
-				waypointsList += coordArr[0];
-				waypointsList += coordArr[1];
+				waypointsListX += coordArr[0];
+				waypointsListY += coordArr[1];
 
                 //if(wpLText.length > 0) wpLText += "X";
                 //wpLText += coords;
@@ -109,7 +111,7 @@
             fillColor: 'lightgreen',
             fillOpacity: 0.5,
         }).addTo(lmap);
-		region_route.remove();
+		//region_route.remove();
         
         var region_route2 = L.polygon([
             [latlng.lat, latlng.lng], 
