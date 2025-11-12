@@ -93,14 +93,13 @@
         cHiddenInput.value = cText;
 
 
-        var lmap = new SLMap(document.getElementById('map-container')
-							.doubleClickZoom(false));
+        var lmap = new SLMap(document.getElementById('map-container'));
         var latlng = L.latLng(1000,1000);
         lmap.setView(latlng, 7);
         
         var lmap2 = new SLMap(document.getElementById('map-container2'));
         lmap2.setView(latlng, 2); 
-        //lmap2.doubleClickZoom('false');
+        lmap2.doubleClickZoom('false');
         
         var region_route = L.polygon([
             [latlng.lat, latlng.lng], 
