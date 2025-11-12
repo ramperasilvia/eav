@@ -44,6 +44,9 @@
                 option.value = coords; 
                 rLSelect.appendChild(option);
                 
+				const coordsArr = coords.split("z");
+				routeList += coordsArr[0];
+				routeList += coordsArr[1];
                 //if(rLText.length > 0) rLText += "X";
                 //rLText += coords;
             });
