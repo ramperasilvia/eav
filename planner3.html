@@ -8,10 +8,25 @@
 <script>
     function loadmap() {
 
-		let routeListX = [];
-		let routeListY = [];
-		let waypointsListX = [];
-		let waypointsListY = [];
+        var lmap = new SLMap(document.getElementById('map-container'));
+        var latlngStart = L.latLng(1000,1000);
+        lmap.setView(latlngStart, 7);
+        
+        var lmap2 = new SLMap(document.getElementById('map-container2'));
+        lmap2.setView(latlngStart, 2); 
+        
+        lmap.doubleClickZoom.disable();
+        lmap2.doubleClickZoom.disable();
+
+        let routeListX = [];
+        let routeListY = [];
+        let waypointsListX = [];
+        let waypointsListY = [];
+
+        let mapRouteCoords = [];
+        let mapWaypointCoords = [];
+
+        let coordFocus = null;
 
         // 1. Retrieve data from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -36,44 +51,47 @@
             }
         }
 
-		//let rLText = routeListFromUrl;
         if(routeListFromUrl) {
             const route = routeListFromUrl.split('X');
-            route.forEach(coords => {
+            for (let i = 0; i < route.length; i++) {
                 const option = document.createElement('option');
-				let textCoords = coords.replace("z",",");
+                let textCoords = route.at(i).replace("z",",");
                 option.textContent = textCoords;
-                option.value = coords; 
+                option.value = i; 
+
+                const coordsArr = route.at(i).split("z");
+                let x = coordsArr.at(0);
+                let y = coordsArr.at(1);
+
+                routeListX.push(x);
+                routeListY.push(y);
+
+                option.addEventListener("click", function() {
+                        //setFocusCoord(x,y);
+                      goToCoord(x,y);
+
+                        //console.log(x+","+y);
+                        
+                    }); 
                 rLSelect.appendChild(option);
-                
-				const coordsArr = coords.split("z");
-				routeListX += coordsArr[0];
-				routeListY += coordsArr[1];
-                //if(rLText.length > 0) rLText += "X";
-                //rLText += coords;
-            });
+            }
         }
 
         const rLHiddenInput = document.getElementById("rL")
         rLHiddenInput.value = routeListFromUrl;
 
-
-        //let wpLText = "";
         if(waypointListFromUrl) {
             const waypoints = waypointListFromUrl.split('X');
             waypoints.forEach(coords => {
                 const option = document.createElement('option');
-				let textCoord = coords.replace("z",",");
+                let textCoord = coords.replace("z",",");
                 option.textContent = textCoord;
                 option.value = coords; 
                 wpLSelect.appendChild(option);
 
-				const coordArr = coords.split("z");
-				waypointsListX += coordArr[0];
-				waypointsListY += coordArr[1];
-
-                //if(wpLText.length > 0) wpLText += "X";
-                //wpLText += coords;
+                const coordArr = coords.split("z");
+                waypointsListX += coordArr[0];
+                waypointsListY += coordArr[1];
             });
         }
 
@@ -88,102 +106,177 @@
             
             cText += coord[0] +"X"+coord[1];
         }
-	
+    
         const cHiddenInput = document.getElementById("c")
         cHiddenInput.value = cText;
-
-
-        var lmap = new SLMap(document.getElementById('map-container'));
-        var latlng = L.latLng(1000,1000);
-        lmap.setView(latlng, 7);
         
-        var lmap2 = new SLMap(document.getElementById('map-container2'));
-        lmap2.setView(latlng, 2); 
-		
-		lmap.doubleClickZoom.disable();
-        lmap2.doubleClickZoom.disable();
-        
-        var region_route = L.polygon([
-            [latlng.lat, latlng.lng], 
-            [latlng.lat, latlng.lng+1],
-            [latlng.lat+1, latlng.lng+1],
-            [latlng.lat+1, latlng.lng]
-        ], {
-            color: 'lightgreen', 
-            fillColor: 'lightgreen',
-            fillOpacity: 0.5,
-        }).addTo(lmap);
-		//region_route.remove();
+        populateMapRouteCoords();
         
         var region_route2 = L.polygon([
-            [latlng.lat, latlng.lng], 
-            [latlng.lat, latlng.lng+1],
-            [latlng.lat+1, latlng.lng+1],
-            [latlng.lat+1, latlng.lng]
+            [latlngStart.lat, latlngStart.lng], 
+            [latlngStart.lat, latlngStart.lng+1],
+            [latlngStart.lat+1, latlngStart.lng+1],
+            [latlngStart.lat+1, latlngStart.lng]
         ], {
-            color: 'red',
-            fillColor: '#f03',
+            color: 'lightred',
+            fillColor: 'lightred',
             fillOpacity: 0.5,
         }).addTo(lmap2);
         
         const popup = L.popup()
-            .setLatLng([latlng.lat+0.5,latlng.lng+0.5])
+            .setLatLng([latlngStart.lat+0.5,latlngStart.lng+0.5])
             .setContent('Starting point.')
             .openOn(lmap2);
             
         function onMapClick(e) {
-			let xx = parseInt(e.latlng.lat);
-			let yy = parseInt(e.latlng.lng);
-			var latlng = L.latLng(xx,yy);
-			
-			// >>>>> getTileUrl
-			/* var nexrad = L.tileLayer.wms("http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi", {
-				layers: 'nexrad-n0r-900913',
-				format: 'image/png',
-				transparent: true,
-				attribution: "Weather data © 2012 IEM Nexrad"
-			}); */
-			
-            /*popup
-                .setLatLng([latlng.lat+0.5,latlng.lng+0.5])
-                .setContent(`Position: ${latlng.lat.toString()},${latlng.lng.toString()}`)
-                .openOn(lmap);*/
+
+            let xx = parseInt(e.latlng.lat);
+            let yy = parseInt(e.latlng.lng);
+            var latlng = L.latLng(xx,yy);
+
+            //console.log(L.getTileUrl(latlng));
+
+            //https://map.secondlife.com/map-1-1000-996-objects.jpg
+
+            setFocusCoord(xx, yy);
             
-			var tooltip = L.tooltip()
-				.setLatLng([latlng.lat+0.5,latlng.lng+0.5])
+            var tooltip = L.tooltip()
+                .setLatLng([latlng.lat+0.5,latlng.lng+0.0])
                 .setContent(`${latlng.lat.toString()},${latlng.lng.toString()}`)
                 .openOn(lmap)
-				.setOpacity(0.7);
-			
+                .setOpacity(0.9);
+            
             //const data = "someValue";
             //window.location.href = `next-page.html?myParam=${data}`;
         }
-		
-		function onMapDbClick(e) {
-			let xx = parseInt(e.latlng.lat);
-			let yy = parseInt(e.latlng.lng);
-			var latlng = L.latLng(xx,yy);
-			
+
+        function onMapDbClick(e) {
+
+            let xx = parseInt(e.latlng.lat);
+            let yy = parseInt(e.latlng.lng);
+            var latlng = L.latLng(xx,yy);
+            
             addCoordRoute(xx,yy);
+
+            setFocusCoord(xx,yy);
         }
 
         lmap.on('dblclick', onMapDbClick);
-		lmap.on('click', onMapClick);
-		//lmap2.dblclick
-		
-		function addCoordRoute(x, y) {
-			var latlng = L.latLng(x,y);
-			var region_route = L.polygon([
-				[latlng.lat, latlng.lng], 
-				[latlng.lat, latlng.lng+1],
-				[latlng.lat+1, latlng.lng+1],
-				[latlng.lat+1, latlng.lng]
-			], {
-				color: 'lightgreen', 
-				fillColor: 'lightgreen',
-				fillOpacity: 0.5,
-			}).addTo(lmap);
-		}
+        lmap.on('click', onMapClick);
+        //lmap2.dblclick
+        
+        function addCoordRoute(x, y) {
+            var alreadyExist = isRouteCoord(x,y);
+            //console.log(alreadyExist);
+            if(alreadyExist == -1) {
+
+                var latlng = L.latLng(x,y);
+                var region_route = L.polygon([
+                    [latlng.lat, latlng.lng], 
+                    [latlng.lat, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng]
+                ], {
+                    color: 'lightgreen', 
+                    fillColor: 'lightgreen',
+                    fillOpacity: 0.5,
+                    stroke: false,
+                }).addTo(lmap);
+                mapRouteCoords.push(region_route);
+                routeListX.push(x);
+                routeListY.push(y);
+                //console.log(x +","+y);
+            } 
+            else {
+                mapRouteCoords[alreadyExist].remove();
+                mapRouteCoords.splice(alreadyExist,1);
+                routeListX.splice(alreadyExist,1);
+                routeListY.splice(alreadyExist,1);
+            }
+
+            //console.log(routeListX);
+            //console.log(routeListY);
+        }
+
+        function goToCoord(x, y) {
+            // go to map at this coord
+            let xx = parseInt(x);
+            let yy = parseInt(y);
+
+            setFocusCoord(xx,yy);
+
+            var coord = L.latLng(xx,yy);
+            //console.log(lmap.getZoom());
+            lmap.setView(coord);
+
+        }
+
+        function isRouteCoord(x, y) {
+            for (let i = 0; i < routeListX.length; i++) {
+                  if(routeListX.at(i) == x) {
+                      if(routeListY.at(i) == y) {
+                          //console.log(i);
+                          return i;
+                      }
+                  }
+            }
+            return -1;
+        }
+
+        function populateMapRouteCoords() {
+            for (let i = 0; i < routeListX.length; i++) {
+                  let x = routeListX.at(i);
+                  let y = routeListY.at(i);
+                  //console.log(x +","+y);
+
+                  var latlng = L.latLng(x,y);
+                var region_route = L.polygon([
+                    [latlng.lat, latlng.lng], 
+                    [latlng.lat, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng]
+                ], {
+                    color: 'lightgreen', 
+                    fillColor: 'lightgreen',
+                    fillOpacity: 0.5,
+                    stroke: false,
+                }).addTo(lmap);
+                mapRouteCoords.push(region_route);
+                //console.log(x +","+y);
+              }
+        }
+
+        function isWaypoint(x, y) {
+            for (let i = 0; i < waypointsListX.length; i++) {
+                  if(waypointsListX.at(i) == x) {
+                      if(waypointsListY.at(i) == y) {
+                          //console.log(i);
+                          return i;
+                      }
+                  }
+            }
+        }
+
+        function setFocusCoord(x, y) {
+            //console.log(x+","+y);
+
+            if(coordFocus != null) {
+                coordFocus.remove();
+                coordFocus = null;
+            }
+
+            coordFocus = L.polyline([
+                        [x, y], 
+                        [x, y+1],
+                        [x+1, y+1],
+                        [x+1, y],
+                        [x, y]
+                    ], {
+                        color: 'white', 
+                        weight: 7,
+                        
+                    }).addTo(lmap);
+        }
     }
     
     
