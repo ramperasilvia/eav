@@ -99,7 +99,9 @@
         
         var lmap2 = new SLMap(document.getElementById('map-container2'));
         lmap2.setView(latlng, 2); 
-        lmap2.doubleClickZoom = false;
+		
+		lmap.doubleClickZoom.disable();
+        lmap2.doubleClickZoom.disable();
         
         var region_route = L.polygon([
             [latlng.lat, latlng.lng], 
@@ -130,17 +132,35 @@
             .openOn(lmap2);
             
         function onMapClick(e) {
-            popup
-                .setLatLng(parseInt(e.latlng.lat),parseInt(e.latlng.lng)) 
-                .setContent(`You clicked the map at ${e.latlng.toString()}`)
-                .openOn(lmap);
+			let xx = parseInt(e.latlng.lat);
+			let yy = parseInt(e.latlng.lng);
+			var latlng = L.latLng(xx,yy);
+			
+            /*popup
+                .setLatLng([latlng.lat+0.5,latlng.lng+0.5])
+                .setContent(`Position: ${latlng.lat.toString()},${latlng.lng.toString()}`)
+                .openOn(lmap);*/
             
+			var tooltip = L.tooltip()
+				.setLatLng([latlng.lat+0.5,latlng.lng+0.5])
+                .setContent(`Position: ${latlng.lat.toString()},${latlng.lng.toString()}`)
+                .openOn(lmap)
+				.setOpacity(0.7);
 			
             //const data = "someValue";
             //window.location.href = `next-page.html?myParam=${data}`;
         }
+		
+		function onMapDbClick(e) {
+			let xx = parseInt(e.latlng.lat);
+			let yy = parseInt(e.latlng.lng);
+			var latlng = L.latLng(xx,yy);
+			
+            addCoordRoute(xx,yy);
+        }
 
-        lmap.on('dblclick', onMapClick);
+        lmap.on('dblclick', onMapDbClick);
+		lmap.on('click', onMapClick);
 		//lmap2.dblclick
 		
 		function addCoordRoute(x, y) {
