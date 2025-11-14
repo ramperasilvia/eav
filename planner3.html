@@ -565,4 +565,106 @@
 		populateHiddenWPL();
 	}
 
+	async function getApiData(url) {
+		try {
+			const response = await fetch(url);
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
+			const data = await response.json();
+			console.log(data);
+		} catch (error) {
+			console.error('Fetch error:', error);
+		}
+	}
+	
+	//fetch('https://map.secondlife.com/map-1-1001-996-objects.jpg')
+
+
+	//getApiData('https://map.secondlife.com/map-1-1001-996-objects.jpg');
+	//getApiData('https://map.secondlife.com/map-1-1000-1000-objects.jpg');
+	
+	//fetch('https://map.secondlife.com/map-1-1001-996-objects.jpg')
+	//fetch('https://map.secondlife.com/map-1-1000-1000-objects.jpg')
+	
+/*	function httpGetAsync(theUrl)
+	{
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = function() { 
+			//console.log(xmlHttp.responseText);
+			//console.log(xmlHttp.status);
+			console.log(xmlHttp.readyState);
+			if (xmlHttp.status == 200)
+				console.log("Valid tile.");
+				//return true;
+			//else return false;
+			else console.log("Not a valid tile.");
+			
+		}
+		xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+		xmlHttp.send();
+	}*/
+	
+	//httpGetAsync('https://map.secondlife.com/map-1-1000-1000-objects.jpg');
+	//httpGetAsync('https://map.secondlife.com/map-1-1001-996-objects.jpg');
+	
+	//if(httpGetAsync('https://map.secondlife.com/map-1-1000-1000-objects.jpg')) console.log("Valid tile.");
+	//if(httpGetAsync('https://map.secondlife.com/map-1-1001-996-objects.jpg')) console.log("Valid tile.");
+	//else console.log("Not a valid tile.");
+
+	async function fetchData(url) {
+	  try {
+		// The fetch promise will reject here if the net::ERR_FAILED occurs
+		const response = await fetch(url);
+		console.log(response);
+
+		// If the code reaches here, the fetch was successful from a JS perspective.
+		// It's good practice to check the response.ok property (true for 200-299 statuses)
+		if (!response.ok) {
+		  const errorText = await response.text();
+		  throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
+		}
+
+		//const data = await response.json();
+		//console.log(data);
+
+	  } catch (error) {
+		// This block will catch the 'TypeError: Failed to fetch'
+		// which is the JS representation of net::ERR_FAILED
+		console.error("Fetch operation failed:", error.message);
+		// The error message will likely be a generic "TypeError: Failed to fetch"
+	  }
+}
+//fetchData('https://map.secondlife.com/map-1-1001-996-objects.jpg');
+//fetchData('https://map.secondlife.com/map-1-1000-1000-objects.jpg');
+
+	/*const xhr = new XMLHttpRequest();
+	console.log("UNSENT: ", xhr.status);
+
+	xhr.open("GET", "https://map.secondlife.com/map-1-1001-996-objects.jpg");
+	//xhr.open("GET", "https://map.secondlife.com/map-1-1000-1000-objects.jpg");
+	console.log("OPENED: ", xhr.status);
+
+	xhr.onprogress = () => {
+	  console.log("LOADING: ", xhr.status);
+	};
+
+	xhr.onload = () => {
+	  console.log("DONE: ", xhr.status);
+	};
+
+	xhr.send();*/
+	
+	//fetch('https://map.secondlife.com/map-1-1000-1000-objects.jpg', { mode: 'no-cors'})
+	fetch('https://map.secondlife.com/map-1-1001-996-objects.jpg', { mode: 'no-cors'})
+	  //.then(blob => blob.json())
+	  .then(data => {
+		console.log('What?');
+		return data;
+	  })
+	  .catch(e => {
+		console.log(e);
+		return e;
+	  });
+
     </script>
