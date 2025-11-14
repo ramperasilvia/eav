@@ -245,10 +245,10 @@
             [latlngStart.lat+1, latlngStart.lng+1],
             [latlngStart.lat+1, latlngStart.lng]
         ], {
-            color: 'lightred',
-            fillColor: 'lightred',
-            fillOpacity: 0.5,
-        }).addTo(lmap2);
+				color: 'lightred',
+				fillColor: 'lightred',
+				fillOpacity: 0.5,
+			}).addTo(lmap2);
         
         const popup = L.popup()
             .setLatLng([latlngStart.lat+0.5,latlngStart.lng+0.5])
@@ -322,7 +322,7 @@
                 routeListY.splice(alreadyExist,1);
 
                 //todo
-                resetToMapRouteList(); or removeFromMapRouteList();
+                removeFromMapRouteList(alreadyExist);
             }
 
 
@@ -358,25 +358,25 @@
 
         function populateMapRouteCoords() {
             for (let i = 0; i < routeListX.length; i++) {
-                  let x = routeListX.at(i);
-                  let y = routeListY.at(i);
-                  //console.log(x +","+y);
+				let x = routeListX.at(i);
+				let y = routeListY.at(i);
+				//console.log(x +","+y);
 
-                  var latlng = L.latLng(x,y);
+                var latlng = L.latLng(x,y);
                 var region_route = L.polygon([
                     [latlng.lat, latlng.lng], 
                     [latlng.lat, latlng.lng+1],
                     [latlng.lat+1, latlng.lng+1],
                     [latlng.lat+1, latlng.lng]
-                ], {
-                    color: 'lightgreen', 
-                    fillColor: 'lightgreen',
-                    fillOpacity: 0.5,
-                    stroke: false,
-                }).addTo(lmap);
+                ], 	{
+						color: 'lightgreen', 
+						fillColor: 'lightgreen',
+						fillOpacity: 0.5,
+						stroke: false,
+					}).addTo(lmap);
                 mapRouteCoords.push(region_route);
                 //console.log(x +","+y);
-              }
+            }
         }
 
         function addToMapRouteList(x, y, i) {
@@ -389,6 +389,10 @@
                     }); 
                 rLSelect.appendChild(option);
         }
+		
+		function removeFromMapRouteList(i) {
+			rLSelect.remove(i);
+		}
 
         function populateHiddenRL() {
             let fillHiddenRL = '';
