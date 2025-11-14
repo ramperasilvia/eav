@@ -5,283 +5,7 @@
     <script src='sl.mapapi2.js'></script>
     <link rel='stylesheet' type='text/css' href='sl.mapapi2.css'>
 
-<script>
-    function loadmap() {
 
-        var lmap = new SLMap(document.getElementById('map-container'));
-        var latlngStart = L.latLng(1000,1000);
-        lmap.setView(latlngStart, 7);
-        
-        var lmap2 = new SLMap(document.getElementById('map-container2'));
-        lmap2.setView(latlngStart, 2); 
-        
-        lmap.doubleClickZoom.disable();
-        lmap2.doubleClickZoom.disable();
-
-        let routeListX = [];
-        let routeListY = [];
-        let waypointsListX = [];
-        let waypointsListY = [];
-
-        let mapRouteCoords = [];
-        let mapWaypointCoords = [];
-
-        let coordFocus = null;
-
-        // 1. Retrieve data from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const coordFromUrl = urlParams.get('c');
-        const routeListFromUrl = urlParams.get('rL');
-        const waypointListFromUrl = urlParams.get('wL');
-
-        // 2. get HTML elements to refer
-        const x = document.getElementById('x');
-        const y = document.getElementById('y');
-        const rLSelect = document.getElementById('rLSelect');
-        const wpLSelect = document.getElementById('wpLSelect');
-
-        // 3. Set the value of the input fields
-        if(coordFromUrl) {
-            const coordinate = coordFromUrl.split('X');
-            if (x && coordinate[0]) {
-                x.value = coordinate[0]; 
-            }
-            if (y && coordinate[1]) {
-                y.value = coordinate[1]; 
-            }
-        }
-
-        if(routeListFromUrl) {
-            const route = routeListFromUrl.split('X');
-            for (let i = 0; i < route.length; i++) {
-                const option = document.createElement('option');
-                let textCoords = route.at(i).replace("z",",");
-                option.textContent = textCoords;
-                option.value = i; 
-
-                const coordsArr = route.at(i).split("z");
-                let x = coordsArr.at(0);
-                let y = coordsArr.at(1);
-
-                routeListX.push(x);
-                routeListY.push(y);
-
-                option.addEventListener("click", function() {
-                        //setFocusCoord(x,y);
-                      goToCoord(x,y);
-
-                        //console.log(x+","+y);
-                        
-                    }); 
-                rLSelect.appendChild(option);
-            }
-        }
-
-        const rLHiddenInput = document.getElementById("rL")
-        rLHiddenInput.value = routeListFromUrl;
-
-        if(waypointListFromUrl) {
-            const waypoints = waypointListFromUrl.split('X');
-            waypoints.forEach(coords => {
-                const option = document.createElement('option');
-                let textCoord = coords.replace("z",",");
-                option.textContent = textCoord;
-                option.value = coords; 
-                wpLSelect.appendChild(option);
-
-                const coordArr = coords.split("z");
-                waypointsListX += coordArr[0];
-                waypointsListY += coordArr[1];
-            });
-        }
-
-        const wpLHiddenInput = document.getElementById("wL")
-        wpLHiddenInput.value = waypointListFromUrl;
-
-        let cText = "";
-        if(coordFromUrl) {
-            const coord = coordFromUrl.split('X');
-            x.value = coord[0];
-            y.value = coord[1];
-            
-            cText += coord[0] +"X"+coord[1];
-        }
-    
-        const cHiddenInput = document.getElementById("c")
-        cHiddenInput.value = cText;
-        
-        populateMapRouteCoords();
-        
-        var region_route2 = L.polygon([
-            [latlngStart.lat, latlngStart.lng], 
-            [latlngStart.lat, latlngStart.lng+1],
-            [latlngStart.lat+1, latlngStart.lng+1],
-            [latlngStart.lat+1, latlngStart.lng]
-        ], {
-            color: 'lightred',
-            fillColor: 'lightred',
-            fillOpacity: 0.5,
-        }).addTo(lmap2);
-        
-        const popup = L.popup()
-            .setLatLng([latlngStart.lat+0.5,latlngStart.lng+0.5])
-            .setContent('Starting point.')
-            .openOn(lmap2);
-            
-        function onMapClick(e) {
-
-            let xx = parseInt(e.latlng.lat);
-            let yy = parseInt(e.latlng.lng);
-            var latlng = L.latLng(xx,yy);
-
-            //console.log(L.getTileUrl(latlng));
-
-            //https://map.secondlife.com/map-1-1000-996-objects.jpg
-
-            setFocusCoord(xx, yy);
-            
-            var tooltip = L.tooltip()
-                .setLatLng([latlng.lat+0.5,latlng.lng+0.0])
-                .setContent(`${latlng.lat.toString()},${latlng.lng.toString()}`)
-                .openOn(lmap)
-                .setOpacity(0.9);
-            
-            //const data = "someValue";
-            //window.location.href = `next-page.html?myParam=${data}`;
-        }
-
-        function onMapDbClick(e) {
-
-            let xx = parseInt(e.latlng.lat);
-            let yy = parseInt(e.latlng.lng);
-            var latlng = L.latLng(xx,yy);
-            
-            addCoordRoute(xx,yy);
-
-            setFocusCoord(xx,yy);
-        }
-
-        lmap.on('dblclick', onMapDbClick);
-        lmap.on('click', onMapClick);
-        //lmap2.dblclick
-        
-        function addCoordRoute(x, y) {
-            var alreadyExist = isRouteCoord(x,y);
-            //console.log(alreadyExist);
-            if(alreadyExist == -1) {
-
-                var latlng = L.latLng(x,y);
-                var region_route = L.polygon([
-                    [latlng.lat, latlng.lng], 
-                    [latlng.lat, latlng.lng+1],
-                    [latlng.lat+1, latlng.lng+1],
-                    [latlng.lat+1, latlng.lng]
-                ], {
-                    color: 'lightgreen', 
-                    fillColor: 'lightgreen',
-                    fillOpacity: 0.5,
-                    stroke: false,
-                }).addTo(lmap);
-                mapRouteCoords.push(region_route);
-                routeListX.push(x);
-                routeListY.push(y);
-                //console.log(x +","+y);
-            } 
-            else {
-                mapRouteCoords[alreadyExist].remove();
-                mapRouteCoords.splice(alreadyExist,1);
-                routeListX.splice(alreadyExist,1);
-                routeListY.splice(alreadyExist,1);
-            }
-
-            //console.log(routeListX);
-            //console.log(routeListY);
-        }
-
-        function goToCoord(x, y) {
-            // go to map at this coord
-            let xx = parseInt(x);
-            let yy = parseInt(y);
-
-            setFocusCoord(xx,yy);
-
-            var coord = L.latLng(xx,yy);
-            //console.log(lmap.getZoom());
-            lmap.setView(coord);
-
-        }
-
-        function isRouteCoord(x, y) {
-            for (let i = 0; i < routeListX.length; i++) {
-                  if(routeListX.at(i) == x) {
-                      if(routeListY.at(i) == y) {
-                          //console.log(i);
-                          return i;
-                      }
-                  }
-            }
-            return -1;
-        }
-
-        function populateMapRouteCoords() {
-            for (let i = 0; i < routeListX.length; i++) {
-                  let x = routeListX.at(i);
-                  let y = routeListY.at(i);
-                  //console.log(x +","+y);
-
-                  var latlng = L.latLng(x,y);
-                var region_route = L.polygon([
-                    [latlng.lat, latlng.lng], 
-                    [latlng.lat, latlng.lng+1],
-                    [latlng.lat+1, latlng.lng+1],
-                    [latlng.lat+1, latlng.lng]
-                ], {
-                    color: 'lightgreen', 
-                    fillColor: 'lightgreen',
-                    fillOpacity: 0.5,
-                    stroke: false,
-                }).addTo(lmap);
-                mapRouteCoords.push(region_route);
-                //console.log(x +","+y);
-              }
-        }
-
-        function isWaypoint(x, y) {
-            for (let i = 0; i < waypointsListX.length; i++) {
-                  if(waypointsListX.at(i) == x) {
-                      if(waypointsListY.at(i) == y) {
-                          //console.log(i);
-                          return i;
-                      }
-                  }
-            }
-        }
-
-        function setFocusCoord(x, y) {
-            //console.log(x+","+y);
-
-            if(coordFocus != null) {
-                coordFocus.remove();
-                coordFocus = null;
-            }
-
-            coordFocus = L.polyline([
-                        [x, y], 
-                        [x, y+1],
-                        [x+1, y+1],
-                        [x+1, y],
-                        [x, y]
-                    ], {
-                        color: 'white', 
-                        weight: 7,
-                        
-                    }).addTo(lmap);
-        }
-    }
-    
-    
-    
-    </script>
 
     <style>
     div#both {
@@ -373,7 +97,7 @@
     }
     </style>
 
-    </head><body onload='loadmap()'>
+    </head><body> 
     
     <div id='map-container'></div>
     <div id='left-side'>
@@ -402,7 +126,7 @@
                         <input type="hidden" id="c" name="c" value="">
                         <input type="hidden" id="rL" name="rL" value="">
                         <input type="hidden" id="wL" name="wL" value="">
-                        <input type='submit' value='Go!' display='inline-flex'>
+                        <input type='submit' value='Go!' display='inline-flex' onclick="populateHiddenRL()">
                         </form>
                     </div>
                 </div>
@@ -412,7 +136,7 @@
                     <label>Waypoints:</label>
                     <select id='wpLSelect' name='wpLSelect' multiple size='17'>
                     </select>
-                    <button type="button"  onclick="alert('Hello World!')">Go!</button> 
+                    <button type="button"  >Populate hidden rL.</button> 
                     <button type="button" onclick="alert('Hello World!')">Go!</button> 
                 </div>
             </div>
@@ -420,3 +144,296 @@
     </div>
             
     </body></html>
+
+    <script>
+    //function loadmap() {
+
+        var lmap = new SLMap(document.getElementById('map-container'));
+        var latlngStart = L.latLng(1000,1000);
+        lmap.setView(latlngStart, 7);
+        
+        var lmap2 = new SLMap(document.getElementById('map-container2'));
+        lmap2.setView(latlngStart, 2); 
+        
+        lmap.doubleClickZoom.disable();
+        lmap2.doubleClickZoom.disable();
+
+        let routeListX = [];
+        let routeListY = [];
+        let waypointsListX = [];
+        let waypointsListY = [];
+
+        let mapRouteCoords = [];
+        let mapWaypointCoords = [];
+
+        let coordFocus = null;
+
+        // 1. Retrieve data from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const coordFromUrl = urlParams.get('c');
+        const routeListFromUrl = urlParams.get('rL');
+        const waypointListFromUrl = urlParams.get('wL');
+
+        // 2. get HTML elements to refer
+        const x = document.getElementById('x');
+        const y = document.getElementById('y');
+        const rLSelect = document.getElementById('rLSelect');
+        const wpLSelect = document.getElementById('wpLSelect');
+
+        // 3. Set the value of the input fields
+        if(coordFromUrl) {
+            const coordinate = coordFromUrl.split('X');
+            if (x && coordinate[0]) {
+                x.value = coordinate[0]; 
+            }
+            if (y && coordinate[1]) {
+                y.value = coordinate[1]; 
+            }
+        }
+
+        if(routeListFromUrl) {
+            const route = routeListFromUrl.split('X');
+            for (let i = 0; i < route.length; i++) {
+                const coordsArr = route.at(i).split("z");
+                let x = coordsArr.at(0);
+                let y = coordsArr.at(1);
+
+                addToMapRouteList(x, y, i);
+
+                routeListX.push(x);
+                routeListY.push(y);
+            }
+            populateMapRouteCoords();
+        }
+
+        const rLHiddenInput = document.getElementById("rL")
+        rLHiddenInput.value = routeListFromUrl;
+
+        if(waypointListFromUrl) {
+            const waypoints = waypointListFromUrl.split('X');
+            waypoints.forEach(coords => {
+                const option = document.createElement('option');
+                let textCoord = coords.replace("z",",");
+                option.textContent = textCoord;
+                option.value = coords; 
+                wpLSelect.appendChild(option);
+
+                const coordArr = coords.split("z");
+                waypointsListX += coordArr[0];
+                waypointsListY += coordArr[1];
+            });
+        }
+
+        const wpLHiddenInput = document.getElementById("wL")
+        wpLHiddenInput.value = waypointListFromUrl;
+
+        let cText = "";
+        if(coordFromUrl) {
+            const coord = coordFromUrl.split('X');
+            x.value = coord[0];
+            y.value = coord[1];
+            
+            cText += coord[0] +"X"+coord[1];
+        }
+    
+        const cHiddenInput = document.getElementById("c")
+        cHiddenInput.value = cText;
+        
+        var region_route2 = L.polygon([
+            [latlngStart.lat, latlngStart.lng], 
+            [latlngStart.lat, latlngStart.lng+1],
+            [latlngStart.lat+1, latlngStart.lng+1],
+            [latlngStart.lat+1, latlngStart.lng]
+        ], {
+            color: 'lightred',
+            fillColor: 'lightred',
+            fillOpacity: 0.5,
+        }).addTo(lmap2);
+        
+        const popup = L.popup()
+            .setLatLng([latlngStart.lat+0.5,latlngStart.lng+0.5])
+            .setContent('Starting point.')
+            .openOn(lmap2);
+            
+        function onMapClick(e) {
+
+            let xx = parseInt(e.latlng.lat);
+            let yy = parseInt(e.latlng.lng);
+            var latlng = L.latLng(xx,yy);
+
+            //console.log(L.getTileUrl(latlng));
+
+            //https://map.secondlife.com/map-1-1000-996-objects.jpg
+
+            setFocusCoord(xx, yy);
+            
+            var tooltip = L.tooltip()
+                .setLatLng([latlng.lat+0.5,latlng.lng+0.0])
+                .setContent(`${latlng.lat.toString()},${latlng.lng.toString()}`)
+                .openOn(lmap)
+                .setOpacity(0.9);
+            
+            //const data = "someValue";
+            //window.location.href = `next-page.html?myParam=${data}`;
+        }
+
+        function onMapDbClick(e) {
+
+            let xx = parseInt(e.latlng.lat);
+            let yy = parseInt(e.latlng.lng);
+            var latlng = L.latLng(xx,yy);
+            
+            addCoordRoute(xx,yy);
+
+            setFocusCoord(xx,yy);
+        }
+
+        lmap.on('dblclick', onMapDbClick);
+        lmap.on('click', onMapClick);
+        //lmap2.dblclick
+        
+        function addCoordRoute(x, y) {
+            var alreadyExist = isRouteCoord(x,y);
+            //console.log(alreadyExist);
+            if(alreadyExist == -1) {
+
+                var latlng = L.latLng(x,y);
+                var region_route = L.polygon([
+                    [latlng.lat, latlng.lng], 
+                    [latlng.lat, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng]
+                ], {
+                    color: 'lightgreen', 
+                    fillColor: 'lightgreen',
+                    fillOpacity: 0.5,
+                    stroke: false,
+                }).addTo(lmap);
+                mapRouteCoords.push(region_route);
+                routeListX.push(x);
+                routeListY.push(y);
+                //console.log(x +","+y);
+                addToMapRouteList(x, y, routeListX.length);
+            } 
+            else {
+                mapRouteCoords[alreadyExist].remove();
+                mapRouteCoords.splice(alreadyExist,1);
+                routeListX.splice(alreadyExist,1);
+                routeListY.splice(alreadyExist,1);
+
+                //todo
+                resetToMapRouteList(); or removeFromMapRouteList();
+            }
+
+
+
+            //console.log(routeListX);
+            //console.log(routeListY);
+        }
+
+        function goToCoord(x, y) {
+            // go to map at this coord
+            let xx = parseInt(x);
+            let yy = parseInt(y);
+
+            setFocusCoord(xx,yy);
+
+            var coord = L.latLng(xx,yy);
+            //console.log(lmap.getZoom());
+            lmap.setView(coord);
+
+        }
+
+        function isRouteCoord(x, y) {
+            for (let i = 0; i < routeListX.length; i++) {
+                  if(routeListX.at(i) == x) {
+                      if(routeListY.at(i) == y) {
+                          //console.log(i);
+                          return i;
+                      }
+                  }
+            }
+            return -1;
+        }
+
+        function populateMapRouteCoords() {
+            for (let i = 0; i < routeListX.length; i++) {
+                  let x = routeListX.at(i);
+                  let y = routeListY.at(i);
+                  //console.log(x +","+y);
+
+                  var latlng = L.latLng(x,y);
+                var region_route = L.polygon([
+                    [latlng.lat, latlng.lng], 
+                    [latlng.lat, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng+1],
+                    [latlng.lat+1, latlng.lng]
+                ], {
+                    color: 'lightgreen', 
+                    fillColor: 'lightgreen',
+                    fillOpacity: 0.5,
+                    stroke: false,
+                }).addTo(lmap);
+                mapRouteCoords.push(region_route);
+                //console.log(x +","+y);
+              }
+        }
+
+        function addToMapRouteList(x, y, i) {
+                const option = document.createElement('option');
+                option.textContent = x + "," + y;
+                option.value = i; 
+
+                option.addEventListener("click", function() {
+                      goToCoord(x,y);
+                    }); 
+                rLSelect.appendChild(option);
+        }
+
+        function populateHiddenRL() {
+            let fillHiddenRL = '';
+            for (let i = 0; i < routeListX.length; i++) {
+                if(i > 0) fillHiddenRL += "X";
+                fillHiddenRL += routeListX.at(i) + "z";
+                fillHiddenRL += routeListY.at(i);
+            }
+            rLHiddenInput.value = fillHiddenRL;
+            //alert(fillHiddenRL);
+        }
+
+        function isWaypoint(x, y) {
+            for (let i = 0; i < waypointsListX.length; i++) {
+                  if(waypointsListX.at(i) == x) {
+                      if(waypointsListY.at(i) == y) {
+                          //console.log(i);
+                          return i;
+                      }
+                  }
+            }
+        }
+
+        function setFocusCoord(x, y) {
+            //console.log(x+","+y);
+
+            if(coordFocus != null) {
+                coordFocus.remove();
+                coordFocus = null;
+            }
+
+            coordFocus = L.polyline([
+                        [x, y], 
+                        [x, y+1],
+                        [x+1, y+1],
+                        [x+1, y],
+                        [x, y]
+                    ], {
+                        color: 'white', 
+                        weight: 7,
+                        
+                    }).addTo(lmap);
+        }
+    //}
+    
+    
+    
+    </script>
