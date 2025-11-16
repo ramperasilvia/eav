@@ -215,6 +215,7 @@
 		
 		var c = L.latLng(coordinate.at(0),coordinate.at(1));
 		routeMap.setView(c, 7);
+		waypointsMap.setView(c, 3); 
 		
 		setFocusOnCoord(parseInt(coordinate.at(0)),parseInt(coordinate.at(1)));
 	}
