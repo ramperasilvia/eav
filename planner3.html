@@ -120,7 +120,7 @@
             <div id='1-columns'>
                 <div id='points-list-box'>
                     <label>Route:</label>
-                    <select id='rLSelect' name='rLSelect' multiple size='29'>
+                    <select id='rLSelect' name='rLSelect' multiple size='28'>
                     </select>
                 </div>
             </div>
@@ -576,6 +576,7 @@
 						}).addTo(waypointsMap);
 	}
 	
+	// fill the hidden input and then get url with the last coord passed
 	function populateHiddenC() {
 		let fillHiddenC = '';
 		
