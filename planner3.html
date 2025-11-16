@@ -216,7 +216,7 @@
 		var c = L.latLng(coordinate.at(0),coordinate.at(1));
 		routeMap.setView(c, 7);
 		
-		setFocusOnCoord(coordinate.at(0),coordinate.at(1))
+		setFocusOnCoord(parseInt(coordinate.at(0)),parseInt(coordinate.at(1)));
 	}
 
 	// make the route list from the get url and show it on the map
