@@ -190,11 +190,13 @@
 	const waypointListFromUrl = urlParams.get('wL');
 	
 	// fill hidden inputs with data coming from the get url
-	const rLHiddenInput = document.getElementById("rL")
+	const rLHiddenInput = document.getElementById("rL");
 	rLHiddenInput.value = routeListFromUrl;
-	const wpLHiddenInput = document.getElementById("wL")
+	const wpLHiddenInput = document.getElementById("wL");
 	wpLHiddenInput.value = waypointListFromUrl;
-	const cHiddenInput = document.getElementById("c")
+	const xInput = document.getElementById("x");
+	const yInput = document.getElementById("y");
+	const cHiddenInput = document.getElementById("c");
 	cHiddenInput.value = coordFromUrl;
 
 	// get HTML elements on the page
@@ -208,6 +210,8 @@
 		const coordinate = coordFromUrl.split('z');
 		x.value = coordinate.at(0); 
 		y.value = coordinate.at(1); 
+		
+		console.log(coordinate.at(1)+","+coordinate.at(0));
 		
 		var c = L.latLng(coordinate.at(1),coordinate.at(0));
 		routeMap.setView(c, 7);
@@ -572,10 +576,21 @@
 						}).addTo(waypointsMap);
 	}
 	
+	function populateHiddenC() {
+		let fillHiddenC = '';
+		
+		const xInput = document.getElementById("x");
+		const yInput = document.getElementById("y");
+		
+		cHiddenInput.value = xInput.value + "z" + yInput.value;
+
+	}	
+	
 	// set all hidden inputs to send
 	function populateAllHidden() {
 		populateHiddenRL()
 		populateHiddenWPL();
+		populateHiddenC();
 	}
-
+	
     </script>
