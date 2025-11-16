@@ -211,9 +211,9 @@
 		x.value = coordinate.at(0); 
 		y.value = coordinate.at(1); 
 		
-		console.log(coordinate.at(1)+","+coordinate.at(0));
+		console.log(coordinate.at(0)+","+coordinate.at(1));
 		
-		var c = L.latLng(coordinate.at(1),coordinate.at(0));
+		var c = L.latLng(coordinate.at(0),coordinate.at(1));
 		routeMap.setView(c, 7);
 	}
 
@@ -578,12 +578,11 @@
 	
 	// fill the hidden input and then get url with the last coord passed
 	function populateHiddenC() {
-		let fillHiddenC = '';
 		
 		const xInput = document.getElementById("x");
 		const yInput = document.getElementById("y");
 		
-		cHiddenInput.value = xInput.value + "z" + yInput.value;
+		cHiddenInput.value = yInput.value + "z" + xInput.value;
 
 	}	
 	
