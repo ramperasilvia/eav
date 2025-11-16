@@ -133,12 +133,14 @@
                         
                         <input type='text' id='x' name='x' required style='width:90px' display='inline-flex' />
                         <input type='text' id='y' name='y' required style='width:90px' display='inline-flex' />
-                        <form action='' method='GET'>
+						<div id='formData'>
+                        <form id='sendData' action='' method='GET'>
                         <input type="hidden" id="c" name="c" value="">
                         <input type="hidden" id="rL" name="rL" value="">
                         <input type="hidden" id="wL" name="wL" value="">
-                        <input type='submit' value='Go!' display='inline-flex' onclick="populateAllHidden()">
+                        <input type='submit' value='Go!' display='inline-flex' onclick="populateAllHidden();">
                         </form>
+						</div>
                     </div>
                 </div>
                 
@@ -155,7 +157,7 @@
     </body></html>
 
     <script>
-
+	
 	// load 2 maps and set some functions
 	var routeMap = new SLMap(document.getElementById('map-container'));
 	var latlngStart = L.latLng(1000,1000);
@@ -188,6 +190,14 @@
 	const coordFromUrl = urlParams.get('c');
 	const routeListFromUrl = urlParams.get('rL');
 	const waypointListFromUrl = urlParams.get('wL');
+	const httpInUrl = urlParams.get('hiU');
+	
+	// format the form to send the get back to the http-in on the script
+	const myDiv = document.getElementById('formData');
+	let content = '<form id="sendData" action="';
+	content += httpInUrl;
+	content += '" method="GET"> <input type="hidden" id="c" name="c" value="">  <input type="hidden" id="rL" name="rL" value="">  <input type="hidden" id="wL" name="wL" value="">  <input type="submit" value="Go!" display="inline-flex" onclick="populateAllHidden();" </form>';
+	myDiv.innerHTML = content;
 	
 	// fill hidden inputs with data coming from the get url
 	const rLHiddenInput = document.getElementById("rL");
