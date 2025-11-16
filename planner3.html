@@ -208,8 +208,8 @@
 	// set the value of passed coord to the input field
 	if(coordFromUrl) {
 		const coordinate = coordFromUrl.split('z');
-		x.value = coordinate.at(0); 
-		y.value = coordinate.at(1); 
+		y.value = coordinate.at(0); 
+		x.value = coordinate.at(1); 
 		
 		console.log(coordinate.at(0)+","+coordinate.at(1));
 		
@@ -280,7 +280,7 @@
 		
 		var tooltip = L.tooltip()
 			.setLatLng([x+0.5,y+0.0])
-			.setContent(x+","+y)
+			.setContent(y+","+x)
 			.openOn(routeMap)
 			.setOpacity(0.9);
 	}
@@ -384,7 +384,7 @@
 	// fill select with the route coords list
 	function addToRouteSelect(x, y, i) {
 		const option = document.createElement('option');
-		option.textContent = x + "," + y;
+		option.textContent = y + "," + x;
 		option.value = i; 
 
 		option.addEventListener("click", function() {
@@ -540,7 +540,7 @@
 	// fill select with the route coords list
 	function addToWaypointsSelect(x, y, i) {
 		const option = document.createElement('option');
-		option.textContent = x + "," + y;
+		option.textContent = y + "," + x;
 		option.value = i; 
 
 		option.addEventListener("click", function() {
@@ -584,7 +584,7 @@
 		const xInput = document.getElementById("x");
 		const yInput = document.getElementById("y");
 		
-		cHiddenInput.value = xInput.value + "z" + yInput.value;
+		cHiddenInput.value = yInput.value + "z" + xInput.value;
 
 	}	
 	
