@@ -61,5 +61,8 @@
 
 	// draw a white square on the coord
 	function setFocusOnWaypointsMap(x, y) {
+		
+	// set all hidden inputs to send
+	function populateAllHidden() {
 
     </script>

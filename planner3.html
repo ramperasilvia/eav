@@ -8,22 +8,24 @@
 
 
     <style>
+	
     div#both {
         marging: 0px;
         padding: 0px;
-        background-color: black;
+        //background-color: black;
     }
+	
     div#map-container {
         width: 1500px;//492px;   
         height: 1000px;//1016px; 
         //border:4px solid black;
         padding: 8px 8px 8px 16px;
         display: inline-block;
-        //background-color: black;
+        background-color: lightgreen;
         float: left;
         position: absolute;
-         
     }
+	
     div#left-side {
         width: 520px; //492px;
         //height: 500px; 
@@ -31,22 +33,29 @@
         //padding: 8px 16px 8px 8px;
         display: inline-block;
         float: right;
-        background-color: green;
+        background-color: lightgreen;
         position: relative;
     }
+	
     div#columns {
-        border:4px solid black;
+        //border:4px solid black;
         display: inline-block;
+		float: right;
+		position: relative;
     }
+	
     div#2-columns {
-        border:4px solid black;
+        //border:4px solid black;
         display: inline-block;
+
     }
+	
     div#1-columns {
-        border:4px solid black;
+        //border:4px solid black;
         display: inline-block;
         float: left;
     }
+	
     div#map-container2 {
         width: 500px; //492px;
         height: 500px; 
@@ -54,46 +63,49 @@
         padding: 8px 8px 8px 8px;
         display: inline-block;
         float: right;
-        //background-color: black;
+        background-color: red;
         position: relative;
     }
+	
     div#search-box {
         width: 220px; //492px;
         //height: 500px; 
-        border:4px solid black;
+        //border:4px solid black;
         padding: 8px 16px 8px 8px;
         display: inline-grid;
         float: right;
-        //background-color: black;
+        background-color: red;
         position: relative;
     }
+	
     div#wp_boxes {
         display:list-item;
     }
+	
     div#waypoint-list-box {
         width: 220px; //492px;
         //height: 500px; 
-        border:4px solid black;
+        //border:4px solid black;
         padding: 8px 16px 8px 8px;
         display: inline-grid;
         float: right;
-        //background-color: black;
+        background-color: red;
         position: relative;
     }
     div#points-list-box {
         width: 220px; //492px;
         //height: 500px; 
-        border:4px solid black;
+        //border:4px solid black;
         padding: 8px 16px 8px 8px;
         display: inline-grid;
         float: left;
-        //background-color: black;
+        background-color: lightgreen;
         position: relative;
     }
     body {
         margin: 0px;
         border:0px;
-        background-color: white;// black;
+        background-color: lightgreen;// black;
     }
     </style>
 
@@ -108,9 +120,8 @@
             <div id='1-columns'>
                 <div id='points-list-box'>
                     <label>Route:</label>
-                    <select id='rLSelect' name='rLSelect' multiple size='22'>
+                    <select id='rLSelect' name='rLSelect' multiple size='25'>
                     </select>
-                    <button type="button"  onclick="alert('Hello World!')">Go!</button> 
                 </div>
             </div>
             
@@ -134,10 +145,8 @@
 
                 <div id='waypoint-list-box'>
                     <label>Waypoints:</label>
-                    <select id='wpLSelect' name='wpLSelect' multiple size='17'>
+                    <select id='wpLSelect' name='wpLSelect' multiple size='19'>
                     </select>
-                    <button type="button"  >Populate hidden rL.</button> 
-                    <button type="button" onclick="alert('Hello World!')">Go!</button> 
                 </div>
             </div>
         </div>
@@ -560,111 +569,10 @@
 						}).addTo(waypointsMap);
 	}
 	
+	// set all hidden inputs to send
 	function populateAllHidden() {
 		populateHiddenRL()
 		populateHiddenWPL();
 	}
-
-	async function getApiData(url) {
-		try {
-			const response = await fetch(url);
-			if (!response.ok) {
-				throw new Error('Network response was not ok');
-			}
-			const data = await response.json();
-			console.log(data);
-		} catch (error) {
-			console.error('Fetch error:', error);
-		}
-	}
-	
-	//fetch('https://map.secondlife.com/map-1-1001-996-objects.jpg')
-
-
-	//getApiData('https://map.secondlife.com/map-1-1001-996-objects.jpg');
-	//getApiData('https://map.secondlife.com/map-1-1000-1000-objects.jpg');
-	
-	//fetch('https://map.secondlife.com/map-1-1001-996-objects.jpg')
-	//fetch('https://map.secondlife.com/map-1-1000-1000-objects.jpg')
-	
-/*	function httpGetAsync(theUrl)
-	{
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.onreadystatechange = function() { 
-			//console.log(xmlHttp.responseText);
-			//console.log(xmlHttp.status);
-			console.log(xmlHttp.readyState);
-			if (xmlHttp.status == 200)
-				console.log("Valid tile.");
-				//return true;
-			//else return false;
-			else console.log("Not a valid tile.");
-			
-		}
-		xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-		xmlHttp.send();
-	}*/
-	
-	//httpGetAsync('https://map.secondlife.com/map-1-1000-1000-objects.jpg');
-	//httpGetAsync('https://map.secondlife.com/map-1-1001-996-objects.jpg');
-	
-	//if(httpGetAsync('https://map.secondlife.com/map-1-1000-1000-objects.jpg')) console.log("Valid tile.");
-	//if(httpGetAsync('https://map.secondlife.com/map-1-1001-996-objects.jpg')) console.log("Valid tile.");
-	//else console.log("Not a valid tile.");
-
-	async function fetchData(url) {
-	  try {
-		// The fetch promise will reject here if the net::ERR_FAILED occurs
-		const response = await fetch(url);
-		console.log(response);
-
-		// If the code reaches here, the fetch was successful from a JS perspective.
-		// It's good practice to check the response.ok property (true for 200-299 statuses)
-		if (!response.ok) {
-		  const errorText = await response.text();
-		  throw new Error(`HTTP error! status: ${response.status}, details: ${errorText}`);
-		}
-
-		//const data = await response.json();
-		//console.log(data);
-
-	  } catch (error) {
-		// This block will catch the 'TypeError: Failed to fetch'
-		// which is the JS representation of net::ERR_FAILED
-		console.error("Fetch operation failed:", error.message);
-		// The error message will likely be a generic "TypeError: Failed to fetch"
-	  }
-}
-//fetchData('https://map.secondlife.com/map-1-1001-996-objects.jpg');
-//fetchData('https://map.secondlife.com/map-1-1000-1000-objects.jpg');
-
-	/*const xhr = new XMLHttpRequest();
-	console.log("UNSENT: ", xhr.status);
-
-	xhr.open("GET", "https://map.secondlife.com/map-1-1001-996-objects.jpg");
-	//xhr.open("GET", "https://map.secondlife.com/map-1-1000-1000-objects.jpg");
-	console.log("OPENED: ", xhr.status);
-
-	xhr.onprogress = () => {
-	  console.log("LOADING: ", xhr.status);
-	};
-
-	xhr.onload = () => {
-	  console.log("DONE: ", xhr.status);
-	};
-
-	xhr.send();*/
-	
-	//fetch('https://map.secondlife.com/map-1-1000-1000-objects.jpg', { mode: 'no-cors'})
-	fetch('https://map.secondlife.com/map-1-1001-996-objects.jpg', { mode: 'no-cors'})
-	  //.then(blob => blob.json())
-	  .then(data => {
-		console.log('What?');
-		return data;
-	  })
-	  .catch(e => {
-		console.log(e);
-		return e;
-	  });
 
     </script>
