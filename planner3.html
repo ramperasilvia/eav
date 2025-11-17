@@ -138,6 +138,7 @@
                         <input type="hidden" id="c" name="c" value="">
                         <input type="hidden" id="rL" name="rL" value="">
                         <input type="hidden" id="wL" name="wL" value="">
+						<input type="hidden" id="hiU" name="hiU" value="">
                         <input type='submit' value='Go!' display='inline-flex' onclick="populateAllHidden();">
                         </form>
 						</div>
@@ -196,7 +197,7 @@
 	const myDiv = document.getElementById('formData');
 	let content = '<form id="sendData" action="';
 	content += httpInUrl;
-	content += '" method="GET"> <input type="hidden" id="c" name="c" value="">  <input type="hidden" id="rL" name="rL" value="">  <input type="hidden" id="wL" name="wL" value="">  <input type="submit" value="Go!" display="inline-flex" onclick="populateAllHidden();"> </form>';
+	content += '" method="GET"> <input type="hidden" id="c" name="c" value="">  <input type="hidden" id="rL" name="rL" value="">  <input type="hidden" id="wL" name="wL" value=""> <input type="hidden" id="hiU" name="hiU" value=""> <input type="submit" value="Go!" display="inline-flex" onclick="populateAllHidden();"> </form>';
 	myDiv.innerHTML = content;
 	
 	// fill hidden inputs with data coming from the get url
@@ -208,6 +209,8 @@
 	const yInput = document.getElementById("y");
 	const cHiddenInput = document.getElementById("c");
 	cHiddenInput.value = coordFromUrl;
+	const hiuHiddenInput = document.getElementById("hiU");
+	hiuHiddenInput.value = httpInUrl;
 
 	// get HTML elements on the page
 	const x = document.getElementById('x');
