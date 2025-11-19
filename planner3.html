@@ -8,13 +8,13 @@
 
 
     <style>
-	
+    
     div#both {
         marging: 0px;
         padding: 0px;
         //background-color: black;
     }
-	
+    
     div#map-container {
         width: 1500px;//492px;   
         height: 1000px;//1016px; 
@@ -25,7 +25,7 @@
         float: left;
         position: absolute;
     }
-	
+    
     div#left-side {
         width: 520px; //492px;
         //height: 500px; 
@@ -36,27 +36,27 @@
         background-color: #1d475f;//lightgreen;
         position: relative;
     }
-	
+    
     div#columns {
         //border:4px solid black;
-		width: 500px;
+        width: 500px;
         display: inline-block;
-		float: right;
-		position: relative;
+        float: right;
+        position: relative;
     }
-	
+    
     div#2-columns {
         //border:4px solid black;
         display: inline-block;
 
     }
-	
+    
     div#1-columns {
         //border:4px solid black;
         display: inline-block;
         float: left;
     }
-	
+    
     div#map-container2 {
         width: 500px; //492px;
         height: 500px; 
@@ -64,40 +64,41 @@
         padding: 8px 8px 8px 8px;
         display: inline-block;
         float: right;
-        background-color: red;
+        background-color: #d49a00; //red;
         position: relative;
     }
-	
+    
     div#search-box {
         width: 220px; //492px;
         //height: 500px; 
         //border:4px solid black;
-        padding: 8px 16px 8px 8px;
+        padding: 8px 16px 0px 8px;
         display: inline-grid;
         float: right;
-        background-color: red;
+        background-color: #d49a00;// red;
         position: relative;
-		font-family: Verdana, sans-serif;
+        font-family: Verdana, sans-serif;
         font-size: 16px;
-		font-weight: bold;
+        font-weight: bold;
     }
-	
+    
     div#wp_boxes {
         //display:list-item;
+        //float:center;
     }
-	
+    
     div#waypoint-list-box {
         width: 220px; //492px;
         //height: 500px; 
         //border:4px solid black;
-        padding: 8px 16px 8px 8px;
+        padding: 0px 16px 8px 8px;
         display: inline-grid;
         float: right;
-        background-color: red;
+        background-color: #d49a00; //red;
         position: relative;
-		font-family: Verdana, sans-serif;
+        font-family: Verdana, sans-serif;
         font-size: 16px;
-		font-weight: bold;
+        font-weight: bold;
     }
     div#points-list-box {
         width: 220px; //492px;
@@ -108,41 +109,138 @@
         float: left;
         background-color: #1d475f;//lightgreen;
         position: relative;
-		font-family: Verdana, sans-serif;
+        font-family: Verdana, sans-serif;
         font-size: 16px;
-		font-weight: bold;
+        font-weight: bold;
     }
     body {
         margin: 0px;
         border:0px;
         background-color: #1d475f;//lightgreen;// black;
-		font-family: Verdana, sans-serif;
+        font-family: Verdana, sans-serif;
         font-size: 16px;
-		font-weight: bold;
+        font-weight: bold;
     }
-	select {
+    select#rLSelect {
         /* ... (appearance reset) ... */
         font: inherit; /* Inherit font styles from parent */
+        height: 460px; 
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 5px;
-        background-color: #fff;
+        background-color: #336278; //#fff;
         cursor: pointer;
-		
     }
-	select:focus {
+    select#rLSelect option {
+        font-weight: bold;
+          color: white; 
+    }
+    select#rLSelect option:focus {
+          color: black; /* Sets the font color of all options to blue */
+          background-color:  #eac600;
+    }
+    select#rLSelect option:hover {
+          color: black; /* Sets the font color of all options to blue */
+          background-color: #eac600;
+    }
+    select#rLSelect option:checked {
+          color: black; /* Sets the font color of all options to blue */
+          background-color: #eac600;
+    }
+    select#rLSelect option:focus-visible     {
+          color: black; /* Sets the font color of all options to blue */
+          background-color: #eac600;
+    }
+
+    select#wpLSelect {
+        /* ... (appearance reset) ... */
+        font: inherit; /* Inherit font styles from parent */
+        height: 400px; 
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #eac600; //#fff;
+        cursor: pointer;
+        
+    }
+    select#wpLSelect option {
+        font-weight: bold;
+          color: black; /* Sets the font color of all options to blue */
+    }
+    select#wpLSelect option:focus {
+          color: white; /* Sets the font color of all options to blue */
+          background-color: #336278;
+    }
+    select#wpLSelect option:hover {
+          color: white; /* Sets the font color of all options to blue */
+          background-color: #336278;
+    }
+    select#wpLSelect option:checked {
+          color: white; /* Sets the font color of all options to blue */
+          background-color: #336278;
+    }
+    select:focus{
         outline: none;
         border-color: dodgerblue;
         box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.25);
+        background-color: #eac600;
     }
 
-    select:hover {
-        border-color: #999;
+
+    input#x {
+        /* ... (appearance reset) ... */
+        font: inherit; /* Inherit font styles from parent */
+        width: 90px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #336278; //#fff;
+        cursor: pointer;
+        color: white; 
     }
-	label {
-		color: white;
-	}
-	
+    input#y {
+        /* ... (appearance reset) ... */
+        font: inherit; /* Inherit font styles from parent */
+        width: 90px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #336278; //#fff;
+        cursor: pointer;
+        color: white; 
+    }
+    input {
+        /* ... (appearance reset) ... */
+        font: inherit; /* Inherit font styles from parent */
+        width: 210px; 
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #eac600; //#fff;
+        cursor: pointer;
+        color: black; 
+    }
+
+    label {
+        color: white;
+        padding: 5px 5px 5px 0px;
+    }
+    div#buttonsSubmit {
+        padding: 5px 5px 5px 0px;
+    }
+    input#validate {
+        padding: 5px 5px 5px 5px;
+        width: 220px;
+        display: inline-grid;
+        float: left;
+    }div#validatediv {
+        padding: 10px 0px 10px 0px;
+        width: 220px;
+        display: inline-grid;
+        float: left;
+    }
+
+    
     </style>
 
     </head><body> 
@@ -155,35 +253,39 @@
         <div id='columns'>
             <div id='1-columns'>
                 <div id='points-list-box'>
-                    <label>Route:</label>
-                    <select id='rLSelect' name='rLSelect' size='22'>
-                    </select>
+                    <label>Route</label>
+                    <select id='rLSelect' name='rLSelect' size='20'></select>
+                    <div id='validatediv'>
+                    <input type='button' id='validate' value='Validate Route!' display='inline-flex'></div>
+                    
                 </div>
             </div>
             
             <div id='2-columns'>
                 
                 <div id='search-box'>
-                    <label for='search-label'>Waypoint search:</br></label>
+                    <label for='search-label'>Waypoint:</br></label>
                     <div id='wp_boxes'>
-                        <input type='text' id='x' name='x' style='width:90px' display='inline-flex'>
-                        <input type='text' id='y' name='y' style='width:90px' display='inline-flex'>
-						<div id='formData'>
+                        <input type='text' id='x' name='x' display='inline-flex'>
+                        <input type='text' id='y' name='y' display='inline-flex'>
+                        <div id='formData'>
                         <form id='sendData' action='' method='GET'>
-							<input type="hidden" id="c" name="c" value="">
-							<input type="hidden" id="rL" name="rL" value="">
-							<input type="hidden" id="wL" name="wL" value="">
-							<input type="hidden" id="hiU" name="hiU" value="">
-							<input type='submit' value='Go!' display='inline-flex' onclick="populateAllHidden();">
+                            <input type="hidden" id="c" name="c" value="">
+                            <input type="hidden" id="rL" name="rL" value="">
+                            <input type="hidden" id="wL" name="wL" value="">
+                            <input type="hidden" id="hiU" name="hiU" value="">
+                            <div id='buttonsSubmit'>
+                            <input type='submit' value='Search!' display='inline-flex' onclick="populateAllHidden();">    
+                            </div>
                         </form>
-						</div>
+                        </div>
                     </div>
                 </div>
                 
 
                 <div id='waypoint-list-box'>
-                    <label>Waypoints:</label>
-                    <select id='wpLSelect' name='wpLSelect'size='18'>
+                    <label>Waypoints</label>
+                    <select id='wpLSelect' name='wpLSelect'size='16'>
                     </select>
                 </div>
             </div>
@@ -193,456 +295,582 @@
     </body></html>
 
     <script>
-	
-	// load 2 maps and set some functions
-	var routeMap = new SLMap(document.getElementById('map-container'));
-	var latlngStart = L.latLng(1000,1000);
-	routeMap.setView(latlngStart, 7);
-	
-	var waypointsMap = new SLMap(document.getElementById('map-container2'));
-	waypointsMap.setView(latlngStart, 5); 
-	
-	routeMap.doubleClickZoom.disable();
-	waypointsMap.doubleClickZoom.disable();
-	
-	// create lists for route and waypoints
-	let routeListX = [];
-	let routeListY = [];
-	let waypointsListX = [];
-	let waypointsListY = [];
+    
+    // load 2 maps and set some functions
+    var routeMap = new SLMap(document.getElementById('map-container'));
+    var latlngStart = L.latLng(1000,1000);
+    routeMap.setView(latlngStart, 7);
+    
+    var waypointsMap = new SLMap(document.getElementById('map-container2'));
+    waypointsMap.setView(latlngStart, 5); 
+    
+    routeMap.doubleClickZoom.disable();
+    waypointsMap.doubleClickZoom.disable();
+    
+    // create lists for route and waypoints
+    let routeListX = [];
+    let routeListY = [];
+    let waypointsListX = [];
+    let waypointsListY = [];
 
-	// create map layers for the coordinates
-	let routeMapLayer = [];
-	let routeWPMapLayer = [];
-	let waypointsMapLayer = [];
-	let waypointsRouteMapLayer = [];
-	
-	// white box used as an idicator for simple click and when focusing a coordinate
-	let coordFocus = null;
-	let wpFocus = null;
+    // create map layers for the coordinates
+    let routeMapLayer = [];
+    let routeWPMapLayer = [];
+    let waypointsMapLayer = [];
+    let waypointsRouteMapLayer = [];
+    
+    // white box used as an idicator for simple click and when focusing a coordinate
+    let coordFocus = null;
+    let wpFocus = null;
 
-	// retrieve data from URL parameters
-	const urlParams = new URLSearchParams(window.location.search);
-	const coordFromUrl = urlParams.get('c');
-	const routeListFromUrl = urlParams.get('rL');
-	const waypointListFromUrl = urlParams.get('wL');
-	const httpInUrl = urlParams.get('hiU');
-	
-	// format the form to send the get back to the http-in on the script
-	const myDiv = document.getElementById('formData');
-	let content = '<form id="sendData" action="';
-	content += httpInUrl;
-	content += '" method="GET"> <input type="hidden" id="c" name="c" value="">  <input type="hidden" id="rL" name="rL" value="">  <input type="hidden" id="wL" name="wL" value=""> <input type="hidden" id="hiU" name="hiU" value=""> <input type="submit" value="Go!" display="inline-flex" onclick="populateAllHidden();"> </form>';
-	myDiv.innerHTML = content;
-	
-	// fill hidden inputs with data coming from the get url
-	const rLHiddenInput = document.getElementById("rL");
-	rLHiddenInput.value = routeListFromUrl;
-	const wpLHiddenInput = document.getElementById("wL");
-	wpLHiddenInput.value = waypointListFromUrl;
-	const xInput = document.getElementById("x");
-	const yInput = document.getElementById("y");
-	const cHiddenInput = document.getElementById("c");
-	cHiddenInput.value = coordFromUrl;
-	const hiuHiddenInput = document.getElementById("hiU");
-	hiuHiddenInput.value = httpInUrl;
+    // retrieve data from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const coordFromUrl = urlParams.get('c');
+    const routeListFromUrl = urlParams.get('rL');
+    const waypointListFromUrl = urlParams.get('wL');
+    const httpInUrl = urlParams.get('hiU');
+    
+    // format the form to send the get back to the http-in on the script
+    const myDiv = document.getElementById('formData');
+    let content = '<form id="sendData" action="';
+    content += httpInUrl;
+    content += '" method="GET"> <input type="hidden" id="c" name="c" value="">  <input type="hidden" id="rL" name="rL" value="">  <input type="hidden" id="wL" name="wL" value=""> <input type="hidden" id="hiU" name="hiU" value=""> <div id="buttonsSubmit"> <input type="submit" value="Search!" display="inline-flex" onclick="populateAllHidden();"> </div> </form>';
+    myDiv.innerHTML = content;
+    
+    // fill hidden inputs with data coming from the get url
+    const rLHiddenInput = document.getElementById("rL");
+    rLHiddenInput.value = routeListFromUrl;
+    const wpLHiddenInput = document.getElementById("wL");
+    wpLHiddenInput.value = waypointListFromUrl;
+    const xInput = document.getElementById("x");
+    const yInput = document.getElementById("y");
+    const cHiddenInput = document.getElementById("c");
+    cHiddenInput.value = coordFromUrl;
+    const hiuHiddenInput = document.getElementById("hiU");
+    hiuHiddenInput.value = httpInUrl;
 
-	// get HTML elements on the page
-	const x = document.getElementById('x');
-	const y = document.getElementById('y');
-	const rLSelect = document.getElementById('rLSelect');
-	const wpLSelect = document.getElementById('wpLSelect');
+    // get HTML elements on the page
+    const x = document.getElementById('x');
+    const y = document.getElementById('y');
+    const rLSelect = document.getElementById('rLSelect');
+    const wpLSelect = document.getElementById('wpLSelect');
 
-	// set the value of passed coord to the input field
-	if(coordFromUrl) {
-		const coordinate = coordFromUrl.split('z');
-		y.value = coordinate.at(0); 
-		x.value = coordinate.at(1); 
-		
-		console.log(coordinate.at(0)+","+coordinate.at(1));
-		
-		var c = L.latLng(coordinate.at(0),coordinate.at(1));
-		routeMap.setView(c, 7);
-		var cwp = L.latLng(coordinate.at(0),coordinate.at(1));
-		waypointsMap.setView(cwp, 3); 
-		
-		setFocusOnCoord(parseInt(coordinate.at(0)),parseInt(coordinate.at(1)));
-	}
+    // set the value of passed coord to the input field
+    if(coordFromUrl) {
+        const coordinate = coordFromUrl.split('z');
+        y.value = coordinate.at(0); 
+        x.value = coordinate.at(1); 
+        
+        //console.log(coordinate.at(0)+","+coordinate.at(1));
+        
+        var c = L.latLng(coordinate.at(0),coordinate.at(1));
+        routeMap.setView(c, 7);
+        var cwp = L.latLng(coordinate.at(0),coordinate.at(1));
+        waypointsMap.setView(cwp, 5); 
+        
+        setFocusOnCoord(parseInt(coordinate.at(0)),parseInt(coordinate.at(1)));
+    }
 
-	// make the route list from the get url and show it on the map
-	if(routeListFromUrl) {
-		const route = routeListFromUrl.split('X');
-		for (let i = 0; i < route.length; i++) {
-			const coordsArr = route.at(i).split("z");
-			let x = coordsArr.at(0);
-			let y = coordsArr.at(1);
+    // make the route list from the get url and show it on the map
+    if(routeListFromUrl) {
+        const route = routeListFromUrl.split('X');
+        for (let i = 0; i < route.length; i++) {
+            const coordsArr = route.at(i).split("z");
+            let x = parseInt(coordsArr.at(0));
+            let y = parseInt(coordsArr.at(1));
 
-			addToRouteSelect(x, y, i);
+            addToRouteSelect(x, y, i);
 
-			routeListX.push(x);
-			routeListY.push(y);
-		}
-		populateRoute();
-	}
+            routeListX.push(x);
+            routeListY.push(y);
+        }
+        populateRoute();
+    }
 
-	// make the waypoint list from the get url and show it on the map
-	if(waypointListFromUrl) {
-		const waypoints = waypointListFromUrl.split('X');
-		for (let i = 0; i < waypoints.length; i++) {
-			const wpArr = waypoints.at(i).split("z");
-			let x = wpArr.at(0);
-			let y = wpArr.at(1);
+    // make the waypoint list from the get url and show it on the map
+    if(waypointListFromUrl) {
+        const waypoints = waypointListFromUrl.split('X');
+        for (let i = 0; i < waypoints.length; i++) {
+            const wpArr = waypoints.at(i).split("z");
+            let x = wpArr.at(0);
+            let y = wpArr.at(1);
 
-			addToWaypointsSelect(x, y, i);
+            addToWaypointsSelect(x, y, i);
 
-			waypointsListX.push(x);
-			waypointsListY.push(y);
-		}
-		populateWaypoints();
-	}
+            waypointsListX.push(x);
+            waypointsListY.push(y);
+        }
+        populateWaypoints();
+    }
 
-//	var region_route = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-//			{ color: 'red', fillColor: 'red', fillOpacity: 0.5, stroke: false,
-//			}).addTo(waypointsMap);
-	
-/*	const popup = L.popup()
-		.setLatLng([latlngStart.lat+0.5,latlngStart.lng+0.5])
-		.setContent('Starting point.')
-		.openOn(waypointsMap);
+//    var region_route = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+//            { color: 'red', fillColor: 'red', fillOpacity: 0.5, stroke: false,
+//            }).addTo(waypointsMap);
+    
+/*    const popup = L.popup()
+        .setLatLng([latlngStart.lat+0.5,latlngStart.lng+0.5])
+        .setContent('Starting point.')
+        .openOn(waypointsMap);
 */
 
 
-	/// functions for route map
+    /// functions for route map
 
 
-		
-	// simple left click on map
-	function onRouteMapClick(e) {
+        
+    // simple left click on map
+    function onRouteMapClick(e) {
 
-		let x = parseInt(e.latlng.lat);
-		let y = parseInt(e.latlng.lng);
+        let x = parseInt(e.latlng.lat);
+        let y = parseInt(e.latlng.lng);
 
-		//console.log(L.getTileUrl(latlng));
+        //console.log(L.getTileUrl(latlng));
 
-		//https://map.secondlife.com/map-1-1000-996-objects.jpg
+        //https://map.secondlife.com/map-1-1000-996-objects.jpg
 
-		setFocusOnCoord(x, y);
-		
-		var tooltip = L.tooltip()
-			.setLatLng([x+0.5,y+0.0])
-			.setContent(y+","+x)
-			.openOn(routeMap)
-			.setOpacity(0.9);
-	}
+        setFocusOnCoord(x, y);
+        
+        var tooltip = L.tooltip()
+            .setLatLng([x+0.5,y+0.0])
+            .setContent(y+","+x)
+            .openOn(routeMap)
+            .setOpacity(0.9);
+    }
 
-	// double left click on map
-	function onRouteMapDbClick(e) {
+    // double left click on map
+    function onRouteMapDbClick(e) {
 
-		let x = parseInt(e.latlng.lat);
-		let y = parseInt(e.latlng.lng);
-		
-		addRouteCoord(x,y);
+        let x = parseInt(e.latlng.lat);
+        let y = parseInt(e.latlng.lng);
+        
+        addRouteCoord(x,y);
 
-		setFocusOnCoord(x,y);
-	}
+        setFocusOnCoord(x,y);
+    }
 
-	// sets fuctions for simple and double click on the map
-	routeMap.on('dblclick', onRouteMapDbClick);
-	routeMap.on('click', onRouteMapClick);
-	
-	// add a coordinate to all lists and map
-	function addRouteCoord(x, y) {
-		var alreadyExist = isRouteCoord(x,y);
-		//console.log(alreadyExist);
-		// coord does not exist yet, add
-		if(alreadyExist == -1) {
-			
-			var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'lightgreen', fillColor: 'lightgreen', fillOpacity: 0.5, stroke: false,
-			}).addTo(routeMap);
-			routeMapLayer.push(routeCoord);
-			
-			var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'lightgreen', fillColor: 'lightgreen', fillOpacity: 0.5, stroke: false,
-			}).addTo(waypointsMap);
-			routeWPMapLayer.push(routeWP);
-			
-			routeListX.push(x);
-			routeListY.push(y);
-			//console.log(x +","+y);
-			addToRouteSelect(x, y, routeListX.length);
-		} 
-		else { // coord already exist, remove
-			routeMapLayer.at(alreadyExist).remove();
-			routeWPMapLayer.at(alreadyExist).remove();
-			
-			routeMapLayer.splice(alreadyExist,1);
-			routeWPMapLayer.splice(alreadyExist,1);
-			
-			routeListX.splice(alreadyExist,1);
-			routeListY.splice(alreadyExist,1);
+    // sets fuctions for simple and double click on the map
+    routeMap.on('dblclick', onRouteMapDbClick);
+    routeMap.on('click', onRouteMapClick);
+    
+    // add a coordinate to all lists and map
+    function addRouteCoord(xx, yy) {
+        let x = parseInt(xx);
+        let y = parseInt(yy);
+        var alreadyExist = isRouteCoord(x,y);
+        //console.log(alreadyExist);
+        // coord does not exist yet, add
+        
 
-			removeFromRouteSelect(alreadyExist);
-		}
+        if(alreadyExist == -1) {
+            
+            console.log("Neighbor to first: "+isNeighborToFirstCoord(x,y));
+            console.log("Neighbor to last: "+isNeighborToLastCoord(x,y));
 
-		//console.log(routeListX);
-		//console.log(routeListY);
-	}
+            if(isNeighborToLastCoord(x,y)) {
+                //console.log("Neighbor to last: "+isNeighborToLastCoord(x,y));
+                var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false, //lightgreen
+                }).addTo(routeMap);
+                routeMapLayer.push(routeCoord);
+                
+                var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false,
+                }).addTo(waypointsMap);
+                routeWPMapLayer.push(routeWP);
+                
+                routeListX.push(x);
+                routeListY.push(y);
+                //console.log(x +","+y);
 
-	// center map at this coord
-	function goToCoord(x, y) {
-		setFocusOnCoord(parseInt(x),parseInt(y));
+                showRouteCoord();
+                addToRouteSelect(x, y, routeListX.length);
+            } else if(isNeighborToFirstCoord(x,y)) {
+                //console.log("Neighbor to first: "+isNeighborToFirstCoord(x,y));
+                var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false, //lightgreen
+                }).addTo(routeMap);
+                routeMapLayer.unshift(routeCoord);//routeMapLayer.push(routeCoord);
+                
+                var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false,
+                }).addTo(waypointsMap);
+                routeWPMapLayer.unshift(routeWP);//routeWPMapLayer.push(routeWP);
+                
+                routeListX.unshift(x);//routeListX.push(x);
+                routeListY.unshift(y);//routeListY.push(y);
+                //console.log(x +","+y);
 
-		var coord = L.latLng(parseInt(x),parseInt(y));
-		routeMap.setView(coord);
-	}
+                showRouteCoord();
+                populateSelectWithRoute();//addToRouteSelect(x, y, routeListX.length);
+            
+            }
 
-	// verify if coord is on the route list
-	function isRouteCoord(x, y) {
-		for (let i = 0; i < routeListX.length; i++) {
-			  if(routeListX.at(i) == x) {
-				  if(routeListY.at(i) == y) {
-					  //console.log(i);
-					  return i;
-				  }
-			  }
-		}
-		return -1;
-	}
 
-	// draw coords on both maps and fill the route list
-	function populateRoute() {
-		for (let i = 0; i < routeListX.length; i++) {
-			let x = parseInt(routeListX.at(i));
-			let y = parseInt(routeListY.at(i));
-			//console.log(x +","+y);
-			
-			var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'lightgreen', fillColor: 'lightgreen', fillOpacity: 0.5, stroke: false,
-			}).addTo(routeMap);
-			
-			var routeWPCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'lightgreen', fillColor: 'lightgreen', fillOpacity: 0.5, stroke: false,
-			}).addTo(waypointsMap);
-			
-			routeMapLayer.push(routeCoord);
-			routeWPMapLayer.push(routeWPCoord);
-			//console.log(x +","+y);
-		}
-	}
+            
+        } 
+        else { // coord already exist, remove
+            if(alreadyExist == 0 ) { //|| alreadyExist == routeListX.length
+                routeMapLayer.at(alreadyExist).remove();
+                routeWPMapLayer.at(alreadyExist).remove();
+                
+                routeMapLayer.splice(alreadyExist,1);
+                routeWPMapLayer.splice(alreadyExist,1);
+                
+                routeListX.splice(alreadyExist,1);
+                routeListY.splice(alreadyExist,1);
 
-	// fill select with the route coords list
-	function addToRouteSelect(x, y, i) {
-		const option = document.createElement('option');
-		option.textContent = y + "," + x;
-		option.value = i; 
+                removeFromRouteSelect(alreadyExist);
+            }
+        }
 
-		option.addEventListener("click", function() {
-			  goToCoord(x,y);
-			}); 
-		rLSelect.appendChild(option);
-	}
-	
-	// remove coord from route select
-	function removeFromRouteSelect(i) {
-		rLSelect.remove(i);
-	}
+        //console.log(routeListX);
+        //console.log(routeListY);
+    }
 
-	// fill the hidden input and then get url with the route list
-	function populateHiddenRL() {
-		let fillHiddenRL = '';
-		for (let i = 0; i < routeListX.length; i++) {
-			if(i > 0) fillHiddenRL += "X";
-			fillHiddenRL += routeListX.at(i) + "z";
-			fillHiddenRL += routeListY.at(i);
-		}
-		rLHiddenInput.value = fillHiddenRL;
-		//alert(fillHiddenRL);
-	}
+    // center map at this coord
+    function goToCoord(x, y) {
+        setFocusOnCoord(parseInt(x),parseInt(y));
 
-	// draw a white square on the coord
-	function setFocusOnCoord(x, y) {
-		//console.log(x+","+y);
+        var coord = L.latLng(parseInt(x),parseInt(y));
+        routeMap.setView(coord);
+    }
 
-		if(coordFocus != null) {
-			coordFocus.remove();
-			coordFocus = null;
-		}
+    // verify if coord is on the route list
+    function isRouteCoord(x, y) {
+        for (let i = 0; i < routeListX.length; i++) {
+              if(routeListX.at(i) == x) {
+                  if(routeListY.at(i) == y) {
+                      //console.log(i);
+                      return i;
+                  }
+              }
+        }
+        return -1;
+    }
 
-		coordFocus = L.polyline([[x, y], [x, y+1], [x+1, y+1], [x+1, y], [x, y]], 
-						{ color: 'white', weight: 7,				
-						}).addTo(routeMap);
-	}
+    function showRouteCoord() {
+        let showString = "";
+        //console.log();
+        for (let i = 0; i < routeListX.length; i++) {
+              showString += " [" + i + "] " + routeListX.at(i) + "," + routeListY.at(i);
+        }
+        console.log("routelist.length="+routeListX.length+ showString);
+    }
+
+    // draw coords on both maps and fill the route list
+    function populateRoute() {
+        for (let i = 0; i < routeListX.length; i++) {
+            let x = parseInt(routeListX.at(i));
+            let y = parseInt(routeListY.at(i));
+            //console.log(x +","+y);
+            
+            var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+            { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false, //lightgreen
+            }).addTo(routeMap);
+            
+            var routeWPCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+            { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false,
+            }).addTo(waypointsMap);
+            
+            routeMapLayer.push(routeCoord);
+            routeWPMapLayer.push(routeWPCoord);
+            //console.log(x +","+y);
+        }
+    }
+
+    function populateSelectWithRoute() {
+        rLSelect.options.length = 0;
+        for (let i = 0; i < routeListX.length; i++) {
+            addToRouteSelect(routeListX.at(i), routeListY.at(i), i);
+        }
+
+    }
+
+    // fill select with the route coords list
+    function addToRouteSelect(x, y, i) {
+        const option = document.createElement('option');
+        option.textContent = y + "," + x;
+        option.value = i; 
+
+        option.addEventListener("click", function() {
+              goToCoord(x,y);
+            }); 
+        rLSelect.appendChild(option);
+    }
+    
+    // remove coord from route select
+    function removeFromRouteSelect(i) {
+
+        // valid for the last element
+        rLSelect.remove(i);
+    }
+
+    // fill the hidden input and then get url with the route list
+    function populateHiddenRL() {
+        let fillHiddenRL = '';
+        for (let i = 0; i < routeListX.length; i++) {
+            if(i > 0) fillHiddenRL += "X";
+            fillHiddenRL += routeListX.at(i) + "z";
+            fillHiddenRL += routeListY.at(i);
+        }
+        rLHiddenInput.value = fillHiddenRL;
+        //alert(fillHiddenRL);
+    }
+
+    // draw a white square on the coord
+    function setFocusOnCoord(x, y) {
+        //console.log(x+","+y);
+
+        if(coordFocus != null) {
+            coordFocus.remove();
+            coordFocus = null;
+        }
+
+        coordFocus = L.polyline([[x, y], [x, y+1], [x+1, y+1], [x+1, y], [x, y]], 
+                        { color: 'white', weight: 3,                
+                        }).addTo(routeMap);
+    }
 
 
     /// functions for wp map
 
 
-	// sets fuctions for simple and double click on the map
-	waypointsMap.on('dblclick', onWaypointsMapDbClick);
-	waypointsMap.on('click', onWaypointsMapClick);
+    // sets fuctions for simple and double click on the map
+    waypointsMap.on('dblclick', onWaypointsMapDbClick);
+    waypointsMap.on('click', onWaypointsMapClick);
 
-	// simple left click on wp map
-	function onWaypointsMapClick(e) {
+    // simple left click on wp map
+    function onWaypointsMapClick(e) {
 
-		let x = parseInt(e.latlng.lat);
-		let y = parseInt(e.latlng.lng);
+        let x = parseInt(e.latlng.lat);
+        let y = parseInt(e.latlng.lng);
 
-		//console.log(L.getTileUrl(latlng));
+        //console.log(L.getTileUrl(latlng));
 
-		//https://map.secondlife.com/map-1-1000-996-objects.jpg
+        //https://map.secondlife.com/map-1-1000-996-objects.jpg
 
-		setFocusOnWaypointsMap(x, y);
-	}
+        setFocusOnWaypointsMap(x, y);
+    }
 
-	// double left click on wp map
-	function onWaypointsMapDbClick(e) {
+    // double left click on wp map
+    function onWaypointsMapDbClick(e) {
 
-		let x = parseInt(e.latlng.lat);
-		let y = parseInt(e.latlng.lng);
-		
-		addWaypoint(x,y);
+        let x = parseInt(e.latlng.lat);
+        let y = parseInt(e.latlng.lng);
+        
+        addWaypoint(x,y);
 
-		setFocusOnWaypointsMap(x,y);
-	}
+        setFocusOnWaypointsMap(x,y);
+    }
 
-	// add a coordinate to wp list and both maps
-	function addWaypoint(x, y) {
-		var alreadyExist = isWaypoint(x,y);
-		//console.log(alreadyExist);
-		// wp does not exist yet, add
-		if(alreadyExist == -1) {
-			
-			var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'red', fillColor: 'red', fillOpacity: 0.5, stroke: false,
-			}).addTo(routeMap);
-			waypointsRouteMapLayer.push(routeCoord);
-			
-			var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'red', fillColor: 'red', fillOpacity: 0.5, stroke: false,
-			}).addTo(waypointsMap);
-			waypointsMapLayer.push(routeWP);
-			
-			waypointsListX.push(x);
-			waypointsListY.push(y);
-			//console.log(x +","+y);
-			addToWaypointsSelect(x, y, waypointsListX.length);
-		} 
-		else { // wp already exist, remove
-			waypointsRouteMapLayer.at(alreadyExist).remove();
-			waypointsMapLayer.at(alreadyExist).remove();
-			
-			waypointsRouteMapLayer.splice(alreadyExist,1);
-			waypointsMapLayer.splice(alreadyExist,1);
-			
-			waypointsListX.splice(alreadyExist,1);
-			waypointsListY.splice(alreadyExist,1);
+    // add a coordinate to wp list and both maps
+    function addWaypoint(x, y) {
+        var alreadyExist = isWaypoint(x,y);
+        //console.log(alreadyExist);
+        // wp does not exist yet, add
+        if(alreadyExist == -1) {
+            
+            var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+            { color: '#eac600', fillColor: '#eac600', fillOpacity: 0.7, //stroke: false,
+            }).addTo(routeMap);
+            waypointsRouteMapLayer.push(routeCoord);
+            
+            var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+            { color: '#eac600', fillColor: '#eac600', fillOpacity: 0.7, //stroke: false,
+            }).addTo(waypointsMap);
+            waypointsMapLayer.push(routeWP);
+            
+            waypointsListX.push(x);
+            waypointsListY.push(y);
+            //console.log(x +","+y);
+            addToWaypointsSelect(x, y, waypointsListX.length);
+        } 
+        else { // wp already exist, remove
+            waypointsRouteMapLayer.at(alreadyExist).remove();
+            waypointsMapLayer.at(alreadyExist).remove();
+            
+            waypointsRouteMapLayer.splice(alreadyExist,1);
+            waypointsMapLayer.splice(alreadyExist,1);
+            
+            waypointsListX.splice(alreadyExist,1);
+            waypointsListY.splice(alreadyExist,1);
 
-			removeFromWaypointsSelect(alreadyExist);
-		}
+            removeFromWaypointsSelect(alreadyExist);
+        }
 
-		//console.log(routeListX);
-		//console.log(routeListY);
-	}
+        //console.log(routeListX);
+        //console.log(routeListY);
+    }
 
-	// center map at this waypoint
-	function goToWaypoint(x, y) {
-		setFocusOnWaypointsMap(parseInt(x),parseInt(y));
+    // center map at this waypoint
+    function goToWaypoint(x, y) {
+        setFocusOnWaypointsMap(parseInt(x),parseInt(y));
 
-		var coord = L.latLng(parseInt(x),parseInt(y));
-		waypointsMap.setView(coord);
-	}
+        var coord = L.latLng(parseInt(x),parseInt(y));
+        waypointsMap.setView(coord);
+    }
 
-	// check if it is a waypoint on the list
-	function isWaypoint(x, y) {
-		for (let i = 0; i < waypointsListX.length; i++) {
-			  if(waypointsListX.at(i) == x) {
-				  if(waypointsListY.at(i) == y) {
-					  //console.log(i);
-					  return i;
-				  }
-			  }
-		}
-		return -1;
-	}
+    // check if it is a waypoint on the list
+    function isWaypoint(x, y) {
+        for (let i = 0; i < waypointsListX.length; i++) {
+              if(waypointsListX.at(i) == x) {
+                  if(waypointsListY.at(i) == y) {
+                      //console.log(i);
+                      return i;
+                  }
+              }
+        }
+        return -1;
+    }
 
-	// draw coords on the both maps and fill the wp list
-	function populateWaypoints() {
-		for (let i = 0; i < waypointsListX.length; i++) {
-			let x = parseInt(waypointsListX.at(i));
-			let y = parseInt(waypointsListY.at(i));
-			//console.log(x +","+y);
-			
-			var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'red', fillColor: 'red', fillOpacity: 0.5, stroke: false,
-			}).addTo(routeMap);
-			
-			var routeWPCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
-			{ color: 'red', fillColor: 'red', fillOpacity: 0.5, stroke: false,
-			}).addTo(waypointsMap);
-			
-			waypointsRouteMapLayer.push(routeCoord);
-			waypointsMapLayer.push(routeWPCoord);
-			//console.log(x +","+y);
-		}
-	}
+    // draw coords on the both maps and fill the wp list
+    function populateWaypoints() {
+        for (let i = 0; i < waypointsListX.length; i++) {
+            let x = parseInt(waypointsListX.at(i));
+            let y = parseInt(waypointsListY.at(i));
+            //console.log(x +","+y);
+            
+            var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+            { color: '#eac600', fillColor: '#eac600', fillOpacity: 0.7, //stroke: false,
+            }).addTo(routeMap);
+            
+            var routeWPCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+            { color: '#eac600', fillColor: '#eac600', fillOpacity: 0.7, //stroke: false,
+            }).addTo(waypointsMap);
+            
+            waypointsRouteMapLayer.push(routeCoord);
+            waypointsMapLayer.push(routeWPCoord);
+            //console.log(x +","+y);
+        }
+    }
 
-	// fill select with the route coords list
-	function addToWaypointsSelect(x, y, i) {
-		const option = document.createElement('option');
-		option.textContent = y + "," + x;
-		option.value = i; 
+    // fill select with the route coords list
+    function addToWaypointsSelect(x, y, i) {
+        const option = document.createElement('option');
+        option.textContent = y + "," + x;
+        option.value = i; 
 
-		option.addEventListener("click", function() {
-			  goToWaypoint(x,y);
-			}); 
-		wpLSelect.appendChild(option);
-	}
+        option.addEventListener("click", function() {
+              goToWaypoint(x,y);
+            }); 
+        wpLSelect.appendChild(option);
+    }
 
-	// remove coord from route select
-	function removeFromWaypointsSelect(i) {
-		wpLSelect.remove(i);
-	}
+    // remove coord from route select
+    function removeFromWaypointsSelect(i) {
+        wpLSelect.remove(i);
+    }
 
-	// fill the hidden input and then get url with the route list
-	function populateHiddenWPL() {
-		let fillHiddenWPL = '';
-		for (let i = 0; i < waypointsListX.length; i++) {
-			if(i > 0) fillHiddenWPL += "X";
-			fillHiddenWPL += waypointsListX.at(i) + "z";
-			fillHiddenWPL += waypointsListY.at(i);
-		}
-		wpLHiddenInput.value = fillHiddenWPL;
-		//alert(fillHiddenRL);
-	}
+    // fill the hidden input and then get url with the route list
+    function populateHiddenWPL() {
+        let fillHiddenWPL = '';
+        for (let i = 0; i < waypointsListX.length; i++) {
+            if(i > 0) fillHiddenWPL += "X";
+            fillHiddenWPL += waypointsListX.at(i) + "z";
+            fillHiddenWPL += waypointsListY.at(i);
+        }
+        wpLHiddenInput.value = fillHiddenWPL;
+        //alert(fillHiddenRL);
+    }
 
-	// draw a white square on the coord
-	function setFocusOnWaypointsMap(x, y) {
-		if(wpFocus != null) {
-			wpFocus.remove();
-			wpFocus = null;
-		}
+    // draw a white square on the coord
+    function setFocusOnWaypointsMap(x, y) {
+        if(wpFocus != null) {
+            wpFocus.remove();
+            wpFocus = null;
+        }
 
-		wpFocus = L.polyline([[x, y], [x, y+1], [x+1, y+1], [x+1, y], [x, y]], 
-						{ color: 'red', weight: 3,				
-						}).addTo(waypointsMap);
-	}
-	
-	// fill the hidden input and then get url with the last coord passed
-	function populateHiddenC() {
-		
-		const xInput = document.getElementById("x");
-		const yInput = document.getElementById("y");
-		
-		cHiddenInput.value = yInput.value + "z" + xInput.value;
+        wpFocus = L.polyline([[x, y], [x, y+1], [x+1, y+1], [x+1, y], [x, y]], 
+                        { color: 'white', weight: 3,                
+                        }).addTo(waypointsMap);
+    }
+    
+    // fill the hidden input and then get url with the last coord passed
+    function populateHiddenC() {
+        
+        const xInput = document.getElementById("x");
+        const yInput = document.getElementById("y");
+        
+        cHiddenInput.value = yInput.value + "z" + xInput.value;
 
-	}	
-	
-	// set all hidden inputs to send
-	function populateAllHidden() {
-		populateHiddenRL()
-		populateHiddenWPL();
-		populateHiddenC();
-	}
-	
+    }    
+    
+    // set all hidden inputs to send
+    function populateAllHidden() {
+        populateHiddenRL()
+        populateHiddenWPL();
+        populateHiddenC();
+    }
+
+    function isNeighborToFirstCoord(x,y) {
+        let xFirstCoord = parseInt(routeListX.at(0));
+        let yFirstCoord = parseInt(routeListY.at(0));
+
+        let xInt = parseInt(x);
+        let yInt = parseInt(y);
+
+        //console.log(xFirstCoord+","+yFirstCoord);
+        //console.log(x+","+y);
+
+        if( (x == (xFirstCoord + 1) && y == yFirstCoord)  ) {// north!
+            return true;
+        }
+        if( (x == (xFirstCoord - 1) && y == yFirstCoord)  ) {// south!
+            return true;
+        }
+        if( (x == xFirstCoord && y == (yFirstCoord + 1))  ) {// east!
+            return true;
+        }
+        if( (x == (xFirstCoord ) && (y == yFirstCoord -1))  ) {// west!
+            return true;
+        }
+        return false;
+    }
+
+    function isNeighborToLastCoord(x,y) {
+        if(routeListX.length > 1) {
+            let xFirstCoord = parseInt(routeListX.at(routeListX.length-1));
+            let yFirstCoord = parseInt(routeListY.at(routeListY.length-1));
+
+            let xInt = parseInt(x);
+            let yInt = parseInt(y);
+
+            //console.log(xFirstCoord+","+yFirstCoord);
+            //console.log(x+","+y);
+
+            if( (x == (xFirstCoord + 1) && y == yFirstCoord)  ) {// north!
+                return true;
+            }
+            if( (x == (xFirstCoord - 1) && y == yFirstCoord)  ) {// south!
+                return true;
+            }
+            if( (x == xFirstCoord && y == (yFirstCoord + 1))  ) {// east!
+                return true;
+            }
+            if( (x == (xFirstCoord ) && (y == yFirstCoord -1))  ) {// west!
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /*
+    console.log(isNeighborToFirstCoord(1044,1103)); // north!
+    console.log(isNeighborToFirstCoord(1042,1103)); // south!
+    console.log(isNeighborToFirstCoord(1043,1104)); // east!
+    console.log(isNeighborToFirstCoord(1043,1102)); // west!
+    console.log(isNeighborToFirstCoord(1043,1103)); // no!
+    */
+
+
+    //using the validate route buttom to send the form
+    const myForm = document.getElementById('sendData');
+    const submitButton = document.getElementById('validate');
+
+    submitButton.addEventListener('click', () => {
+        populateAllHidden();
+        myForm.submit(); // This will submit the form
+    });
+    
     </script>
