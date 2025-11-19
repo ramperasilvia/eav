@@ -503,12 +503,11 @@
 
                 showRouteCoord();
                 addToRouteSelect(x, y, routeListX.length);
-
 			}
             
         } 
         else { // coord already exist, remove
-            if(alreadyExist == 0 ) { //|| alreadyExist == routeListX.length
+            if(alreadyExist == 0 || alreadyExist == (routeListX.length - 1) ) { //|| alreadyExist == routeListX.length
                 routeMapLayer.at(alreadyExist).remove();
                 routeWPMapLayer.at(alreadyExist).remove();
                 
