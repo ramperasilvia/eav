@@ -477,11 +477,11 @@
 				// add coord at the end
 				addCoordEnd(x,y);
 				
-			}  else if(isNeighborToLastCoord(x,y)) {
+			}  else if(isNeighborToLastCoord(x,y)  && routeListX.length > 1) {
                 // add coord at the end
 				addCoordEnd(x,y);
                 
-			}  else if(isNeighborToFirstCoord(x,y)) {
+			}  else if(isNeighborToFirstCoord(x,y) && routeListX.length > 1) {
 				// add coord at the start
                 addCoordStart(x,y);
             
