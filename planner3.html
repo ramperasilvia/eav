@@ -553,7 +553,7 @@
 			}
             
         } 
-        else { // coord already exist, remove
+        else { // coord already exist, remove first or last
             if(alreadyExist == 0 || alreadyExist == (routeListX.length - 1) ) { //|| alreadyExist == routeListX.length
                 routeMapLayer.at(alreadyExist).remove();
                 routeWPMapLayer.at(alreadyExist).remove();
