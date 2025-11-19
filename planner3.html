@@ -533,7 +533,24 @@
 
                 showRouteCoord();
                 addToRouteSelect(x, y, routeListX.length);
-			} 
+			} else if (routeListX.length == 0) {
+				var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false, //lightgreen
+                }).addTo(routeMap);
+                routeMapLayer.push(routeCoord);
+                
+                var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false,
+                }).addTo(waypointsMap);
+                routeWPMapLayer.push(routeWP);
+                
+                routeListX.push(x);
+                routeListY.push(y);
+                //console.log(x +","+y);
+
+                showRouteCoord();
+                addToRouteSelect(x, y, routeListX.length);
+			}
             
         } 
         else { // coord already exist, remove
