@@ -464,27 +464,28 @@
             
             console.log("Neighbor to first: "+isNeighborToFirstCoord(x,y) + " and neighbor to last: "+isNeighborToLastCoord(x,y));
 
-            if(isNeighborToFirstCoord(x,y)) {
-				// add coord at the start
-                addCoordStart(x,y);
-            
-            } else if(isNeighborToLastCoord(x,y)) {
-                // add coord at the end
+			if (routeListX.length == 0) {
+				// first point, besides the function name, it is faster ^^
 				addCoordEnd(x,y);
-                
+				
 			} else if(!isNeighborToLastCoord(x,y) && !isNeighborToFirstCoord(x,y) && routeListX.length == 1) {
                 // remove another first coord and add new				
 				removeCoord(0);
                 addCoordEnd(x,y);
 				
-			} else if (routeListX.length == 0) {
-				// first point, besides the function name, it is faster ^^
+			}  else if(isNeighborToLastCoord(x,y)) {
+                // add coord at the end
 				addCoordEnd(x,y);
-			}
+                
+			}  else if(isNeighborToFirstCoord(x,y)) {
+				// add coord at the start
+                addCoordStart(x,y);
+            
+            }
             
         } 
         else { // coord already exist, remove first or last
-            if(alreadyExist == 0 || alreadyExist == (routeListX.length - 1) ) { //|| alreadyExist == routeListX.length
+            if(alreadyExist == 0 || alreadyExist == (routeListX.length - 1) ) {
 				removeCoord(alreadyExist);
             }
         }
