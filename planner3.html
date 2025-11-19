@@ -503,7 +503,37 @@
 
                 showRouteCoord();
                 addToRouteSelect(x, y, routeListX.length);
-			}
+			} else if(!isNeighborToLastCoord(x,y) && !isNeighborToFirstCoord(x,y) && routeListX.length == 1) {
+                //console.log("Neighbor to last: "+isNeighborToLastCoord(x,y));
+				
+				routeMapLayer.at(0).remove();
+                routeWPMapLayer.at(0).remove();
+                
+                routeMapLayer.splice(0,1);
+                routeWPMapLayer.splice(0,1);
+                
+                routeListX.splice(0,1);
+                routeListY.splice(0,1);
+
+                removeFromRouteSelect(0);
+				
+                var routeCoord = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false, //lightgreen
+                }).addTo(routeMap);
+                routeMapLayer.push(routeCoord);
+                
+                var routeWP = L.polygon([[x,y], [x, y+1], [x+1, y+1], [x+1, y]], 
+                { color: '#eac600', fillColor: 'white', fillOpacity: 0.3, //stroke: false,
+                }).addTo(waypointsMap);
+                routeWPMapLayer.push(routeWP);
+                
+                routeListX.push(x);
+                routeListY.push(y);
+                //console.log(x +","+y);
+
+                showRouteCoord();
+                addToRouteSelect(x, y, routeListX.length);
+			} 
             
         } 
         else { // coord already exist, remove
