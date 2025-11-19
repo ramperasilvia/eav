@@ -473,6 +473,10 @@
 				removeCoord(0);
                 addCoordEnd(x,y);
 				
+			} else if (routeListX.length == 1 && isNeighborToFirstCoord(x,y)) {
+				// add coord at the end
+				addCoordEnd(x,y);
+				
 			}  else if(isNeighborToLastCoord(x,y)) {
                 // add coord at the end
 				addCoordEnd(x,y);
