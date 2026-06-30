@@ -443,10 +443,18 @@
         let x = parseInt(e.latlng.lat);
         let y = parseInt(e.latlng.lng);
 
+    	var mensagem = "";
+
 		var nomeDaRegiao = routeMap.getRegionNameXY(x, y);
         if (nomeDaRegiao && nomeDaRegiao.trim() !== "") {
 			addRouteCoord(x,y);
-		}
+			mensagem = "Região Válida: " + nomeDaRegiao;
+		} else {
+	        mensagem = "Região Inválida (Oceano Vazio / Sem Servidor)";
+	    }
+
+	    // 4. Adiciona a informação na tela (via alerta ou manipulando a DOM)
+	    console.log(mensagem + " em coordenadas: X=" + x + ", Y=" + y);
 		
         setFocusOnCoord(x,y);
     }
