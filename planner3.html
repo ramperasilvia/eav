@@ -470,14 +470,10 @@
             .setOpacity(0.9);
     }
 
-    // double left click on map
-    function onRouteMapDbClick(e) {
-
-        let x = parseInt(e.latlng.lat);
-        let y = parseInt(e.latlng.lng);
-		
-		// evento.originalEvent.target captura o elemento HTML <img> exato sob o cursor
-	    var tileAlvo = e.originalEvent.target;
+	// Função que lê a propriedade customizada do elemento clicado
+	function processarCliqueNoTile(evento) {
+	    // evento.originalEvent.target captura o elemento HTML <img> exato sob o cursor
+	    var tileAlvo = evento.originalEvent.target;
 	
 	    // Valida se o clique realmente atingiu uma tag de imagem do mapa
 	    if (tileAlvo && tileAlvo.tagName === 'IMG') {
@@ -495,6 +491,16 @@
 	            // Execute aqui o bloqueio ou aviso customizado
 	        }
 	    }
+	}
+
+	// Vincula o evento 'dblclick' diretamente na camada de validação
+	minhaCamadaDeValidacao.on('dblclick', processarCliqueNoTile);
+
+    // double left click on map
+    function onRouteMapDbClick(e) {
+
+        let x = parseInt(e.latlng.lat);
+        let y = parseInt(e.latlng.lng);
 		
 		addRouteCoord(x,y);
         setFocusOnCoord(x,y);
