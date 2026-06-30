@@ -485,6 +485,9 @@
 
         let x = parseInt(e.latlng.lat);
         let y = parseInt(e.latlng.lng);
+
+		var coord = L.latLng(parseInt(x),parseInt(y));
+		console.log(coord.regionValid);
 		
 		addRouteCoord(x,y);
         setFocusOnCoord(x,y);
