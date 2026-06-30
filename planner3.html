@@ -303,29 +303,17 @@
 
 	var CamadaValidadaSL = L.TileLayer.extend({
 	    createTile: function (coords, done) {
-	        // Invoca a criação padrão do elemento HTML <img> do Leaflet
 	        var tile = L.TileLayer.prototype.createTile.call(this, coords, done);
 	        
-	        // Define o estado inicial como indefinido ou aguardando carregamento se preferir, 
-	        // mas iniciaremos com 0 por segurança até que se prove o contrário.
-	        tile.regionValid = 0; 
+	        tile.regionValid = 0; // Padrão inválido
 	
-	        // Caso 1: O tile carregou uma imagem válida com sucesso (Região Existente)
 	        tile.onload = function() {
 	            tile.regionValid = 1;
-	            tile.setAttribute('data-region-valid', '1'); // Opcional: reflete no HTML/DOM Inspector
-	            console.log("Tile Válido carregado em:", coords, "regionValid =", tile.regionValid);
 	        };
 	
-	        // Caso 2: A imagem falhou/deu erro HTTP 404 (Oceano/Região Inexistente)
 	        tile.onerror = function() {
 	            tile.regionValid = 0;
-	            tile.setAttribute('data-region-valid', '0'); // Opcional: reflete no HTML/DOM Inspector
-	            
-	            // Substitui por um tile padrão transparente ou de oceano estático
-	            //tile.src = "https://secondlife.com"; 
-	            
-	            console.warn("Tile Inválido (Erro/Oceano) em:", coords, "regionValid =", tile.regionValid);
+	            tile.src = "https://secondlife.com"; 
 	        };
 	
 	        return tile;
@@ -487,10 +475,11 @@
 
         let x = parseInt(e.latlng.lat);
         let y = parseInt(e.latlng.lng);
-
-		var tileAlvo = evento.originalEvent.target;
-
-		// Valida se o clique realmente atingiu uma tag de imagem do mapa
+		
+		// evento.originalEvent.target captura o elemento HTML <img> exato sob o cursor
+	    var tileAlvo = evento.originalEvent.target;
+	
+	    // Valida se o clique realmente atingiu uma tag de imagem do mapa
 	    if (tileAlvo && tileAlvo.tagName === 'IMG') {
 	        
 	        // Lê a propriedade que criamos dinamicamente na camada
