@@ -488,9 +488,24 @@
         let x = parseInt(e.latlng.lat);
         let y = parseInt(e.latlng.lng);
 
-		var coord = L.latLng(parseInt(x),parseInt(y));
-		//console.log(coord.regionValid);
-		console.log(this.regionValid);
+		var tileAlvo = evento.originalEvent.target;
+
+		// Valida se o clique realmente atingiu uma tag de imagem do mapa
+	    if (tileAlvo && tileAlvo.tagName === 'IMG') {
+	        
+	        // Lê a propriedade que criamos dinamicamente na camada
+	        var statusRegiao = tileAlvo.regionValid;
+	
+	        if (statusRegiao === 1) {
+	            console.log("🟢 Usuário clicou em uma região ATIVA.");
+	            alert("Ação permitida! Região válida detectada (regionValid: " + statusRegiao + ").");
+	            // Execute aqui a lógica para região válida (ex: iniciar teleporte)
+	        } else {
+	            console.warn("🔴 Usuário clicou em um espaço INVÁLIDO/OCEANO.");
+	            alert("Ação bloqueada. Esta área não possui uma região ativa (regionValid: " + statusRegiao + ").");
+	            // Execute aqui o bloqueio ou aviso customizado
+	        }
+	    }
 		
 		addRouteCoord(x,y);
         setFocusOnCoord(x,y);
