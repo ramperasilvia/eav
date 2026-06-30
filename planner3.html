@@ -412,7 +412,49 @@
         .setContent('Starting point.')
         .openOn(waypointsMap);
 */
+	var CamadaValidadaSL = L.TileLayer.extend({
+	    createTile: function (coords, done) {
+	        // Invoca a criação padrão do elemento HTML <img> do Leaflet
+	        var tile = L.TileLayer.prototype.createTile.call(this, coords, done);
+	        
+	        // Define o estado inicial como indefinido ou aguardando carregamento se preferir, 
+	        // mas iniciaremos com 0 por segurança até que se prove o contrário.
+	        tile.regionValid = 0; 
+	
+	        // Caso 1: O tile carregou uma imagem válida com sucesso (Região Existente)
+	        tile.onload = function() {
+	            tile.regionValid = 1;
+	            tile.setAttribute('data-region-valid', '1'); // Opcional: reflete no HTML/DOM Inspector
+	            console.log("Tile Válido carregado em:", coords, "regionValid =", tile.regionValid);
+	        };
+	
+	        // Caso 2: A imagem falhou/deu erro HTTP 404 (Oceano/Região Inexistente)
+	        tile.onerror = function() {
+	            tile.regionValid = 0;
+	            tile.setAttribute('data-region-valid', '0'); // Opcional: reflete no HTML/DOM Inspector
+	            
+	            // Substitui por um tile padrão transparente ou de oceano estático
+	            //tile.src = "https://secondlife.com"; 
+	            
+	            console.warn("Tile Inválido (Erro/Oceano) em:", coords, "regionValid =", tile.regionValid);
+	        };
+	
+	        return tile;
+	    }
+	});
 
+	// 3. Define a URL oficial do ecossistema de mapas da Linden Lab
+	var urlGridSecondLife = 'https://secondlife.com{z}-{x}-{y}-objects.jpg';
+	
+	// 4. Instancia a nova camada inteligente
+	var minhaCamadaDeValidacao = new CamadaValidadaSL(urlGridSecondLife, {
+	    minZoom: 1,
+	    maxZoom: 5,
+	    attribution: 'Linden Lab'
+	});
+	
+	// 5. Injeta a camada configurada no mapa ativo
+	routeMap.addLayer(minhaCamadaDeValidacao);
 
     /// functions for route map
 
@@ -442,20 +484,8 @@
 
         let x = parseInt(e.latlng.lat);
         let y = parseInt(e.latlng.lng);
-
-    	var mensagem = "";
-
-		var nomeDaRegiao = routeMap.getRegionNameXY(x, y);
-        if (nomeDaRegiao && nomeDaRegiao.trim() !== "") {
-			addRouteCoord(x,y);
-			mensagem = "Região Válida: " + nomeDaRegiao;
-		} else {
-	        mensagem = "Região Inválida (Oceano Vazio / Sem Servidor)";
-	    }
-
-	    // 4. Adiciona a informação na tela (via alerta ou manipulando a DOM)
-	    console.log(mensagem + " em coordenadas: X=" + x + ", Y=" + y);
 		
+		addRouteCoord(x,y);
         setFocusOnCoord(x,y);
     }
 
