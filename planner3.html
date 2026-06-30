@@ -300,39 +300,6 @@
     var routeMap = new SLMap(document.getElementById('map-container'));
     var latlngStart = L.latLng(1000,1000);
     routeMap.setView(latlngStart, 7);
-
-	var CamadaValidadaSL = L.TileLayer.extend({
-	    createTile: function (coords, done) {
-	        var tile = L.TileLayer.prototype.createTile.call(this, coords, done);
-	        
-	        tile.regionValid = 0; // Padrão inválido
-	
-	        tile.onload = function() {
-	            tile.regionValid = 1;
-	        };
-	
-	        tile.onerror = function() {
-	            tile.regionValid = 0;
-	            tile.src = "https://secondlife.com"; 
-	        };
-	
-	        return tile;
-	    }
-	});
-
-	// 3. Define a URL oficial do ecossistema de mapas da Linden Lab
-	var urlGridSecondLife = 'http://map.secondlife.com/map-{z}-{x}-{y}-objects.jpg';
-	
-	// 4. Instancia a nova camada inteligente
-	var minhaCamadaDeValidacao = new CamadaValidadaSL(urlGridSecondLife, {
-	    minZoom: 1,
-	    maxZoom: 5,
-	    attribution: 'Linden Lab'
-	});
-	
-	// 5. Injeta a camada configurada no mapa ativo
-	routeMap.addLayer(minhaCamadaDeValidacao);
-	
     
     var waypointsMap = new SLMap(document.getElementById('map-container2'));
     waypointsMap.setView(latlngStart, 5); 
@@ -470,32 +437,6 @@
             .setOpacity(0.9);
     }
 
-	// Função que lê a propriedade customizada do elemento clicado
-	function processarCliqueNoTile(evento) {
-	    // evento.originalEvent.target captura o elemento HTML <img> exato sob o cursor
-	    var tileAlvo = evento.originalEvent.target;
-	
-	    // Valida se o clique realmente atingiu uma tag de imagem do mapa
-	    if (tileAlvo && tileAlvo.tagName === 'IMG') {
-	        
-	        // Lê a propriedade que criamos dinamicamente na camada
-	        var statusRegiao = tileAlvo.regionValid;
-	
-	        if (statusRegiao === 1) {
-	            console.log("🟢 Usuário clicou em uma região ATIVA.");
-	            alert("Ação permitida! Região válida detectada (regionValid: " + statusRegiao + ").");
-	            // Execute aqui a lógica para região válida (ex: iniciar teleporte)
-	        } else {
-	            console.warn("🔴 Usuário clicou em um espaço INVÁLIDO/OCEANO.");
-	            alert("Ação bloqueada. Esta área não possui uma região ativa (regionValid: " + statusRegiao + ").");
-	            // Execute aqui o bloqueio ou aviso customizado
-	        }
-	    }
-	}
-
-	// Vincula o evento 'dblclick' diretamente na camada de validação
-	minhaCamadaDeValidacao.on('dblclick', processarCliqueNoTile);
-
     // double left click on map
     function onRouteMapDbClick(e) {
 
@@ -507,7 +448,7 @@
     }
 
     // sets fuctions for simple and double click on the map
-    //routeMap.on('dblclick', onRouteMapDbClick);
+    routeMap.on('dblclick', onRouteMapDbClick);
     routeMap.on('click', onRouteMapClick);
     
     // add a coordinate to all lists and map
