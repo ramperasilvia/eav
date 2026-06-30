@@ -300,6 +300,7 @@
     var routeMap = new SLMap(document.getElementById('map-container'));
     var latlngStart = L.latLng(1000,1000);
     routeMap.setView(latlngStart, 7);
+	routeMap.addLayer(minhaCamadaDeValidacao);
     
     var waypointsMap = new SLMap(document.getElementById('map-container2'));
     waypointsMap.setView(latlngStart, 5); 
@@ -454,7 +455,7 @@
 	});
 	
 	// 5. Injeta a camada configurada no mapa ativo
-	routeMap.addLayer(minhaCamadaDeValidacao);
+	//routeMap.addLayer(minhaCamadaDeValidacao);
 
     /// functions for route map
 
