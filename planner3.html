@@ -477,7 +477,7 @@
         let y = parseInt(e.latlng.lng);
 		
 		// evento.originalEvent.target captura o elemento HTML <img> exato sob o cursor
-	    var tileAlvo = evento.originalEvent.target;
+	    var tileAlvo = e.originalEvent.target;
 	
 	    // Valida se o clique realmente atingiu uma tag de imagem do mapa
 	    if (tileAlvo && tileAlvo.tagName === 'IMG') {
