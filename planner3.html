@@ -442,9 +442,12 @@
 
         let x = parseInt(e.latlng.lat);
         let y = parseInt(e.latlng.lng);
-        
-        addRouteCoord(x,y);
 
+		var nomeDaRegiao = routeMap.getRegionNameXY(x, y);
+        if (nomeDaRegiao && nomeDaRegiao.trim() !== "") {
+			addRouteCoord(x,y);
+		}
+		
         setFocusOnCoord(x,y);
     }
 
