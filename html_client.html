@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Serverless Dynamic Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding-top: 50px; transition: background 0.5s; color: white; background: #222; }
+        .box { border: 2px solid #555; padding: 20px; display: inline-block; background: #333; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h1>Second Life Live Data (Hash Injected)</h1>
+        <p>Current Color: <strong id="color-text">Extracting Hash...</strong></p>
+        <p>Clicks Counter: <strong id="counter-text">0</strong></p>
+    </div>
+
+    <script>
+        let lslServerUrl = "";
+
+        function initializeClient() {
+            // 1. Natively extract the URL from the hash fragment after the "#" symbol
+            const hashData = window.location.hash.substring(1);
+            
+            if (hashData) {
+                // Decode the string cleanly back into a working URL address
+                lslServerUrl = decodeURIComponent(hashData);
+                document.getElementById("color-text").innerText = "Connecting to LSL...";
+                
+                // 2. Safely trigger the direct background synchronization engine loop
+                setInterval(fetchSLData, 1000);
+                fetchSLData();
+            } else {
+                document.getElementById("color-text").innerText = "Error: No LSL Hash detected in URL.";
+            }
+        }
+
+        async function fetchSLData() {
+            if (!lslServerUrl) return;
+            try {
+                // Execute clean AJAX polling against Second Life directly with a cache buster
+                const response = await fetch(`${lslServerUrl}?t=${Date.now()}`);
+                const data = await response.json();
+
+                document.getElementById("color-text").innerText = data.color;
+                document.getElementById("counter-text").innerText = data.counter;
+                document.body.style.backgroundColor = data.color;
+            } catch (error) {
+                console.error("Polled transaction failed:", error);
+            }
+        }
+
+        // Run the client parser immediately as soon as the DOM settles
+        window.onload = initializeClient;
+    </script>
+</body>
+</html>
