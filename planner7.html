@@ -57,6 +57,7 @@ div#region-search .srow { display: flex; gap: 6px; margin-top: 4px; }
 div#region-search input[type=text] { box-sizing: border-box; flex: 1; min-width: 0; width: auto; background-color: #336278; color: white; cursor: text; }
 div#region-search input[type=text]::placeholder { color: #b8cdd8; }
 div#region-search input[type=button] { box-sizing: border-box; flex: 1; min-width: 0; width: auto; }
+div#region-search input#sRouteBtn { background-color: #336278; color: white; }
 div#sMsg { color: #eac600; min-height: 1.2em; margin-top: 4px; font-size: 14px; }
 div#waypoint-list-box {
     width: 220px;
@@ -205,6 +206,7 @@ let routeLayers = [];     // camadas (linhas + preenchimento) da rota, nos dois 
 let waypointLayers = [];  // camadas dos waypoints, nos dois mapas
 
 let coordFocus = null;
+let lastWpCoord = null;  // último waypoint selecionado no mapa da direita
 let lastCoord = null;   // última região selecionada; vai no parâmetro c do formulário
 let wpFocus = null;
 
@@ -488,20 +490,18 @@ function setFocusOnCoord(lat, lng) {
 }
 
 // ---------- Eventos do mapa da rota ----------
-// Tooltip de tile atualmente aberto (só existe um por vez)
-let currentTooltip = null;
-function clearTooltip() {
-    if (currentTooltip) {
-        currentTooltip.close();
-        currentTooltip = null;
-    }
+// Fecha os tooltips de tile abertos (nos dois mapas, ou só em `onlyMap`).
+// Percorre as camadas do mapa em vez de guardar uma referência, para não deixar nenhum escapar.
+function clearTooltip(onlyMap) {
+    (onlyMap ? [onlyMap] : [routeMap, waypointsMap]).forEach(function (m) {
+        const open = [];
+        m.eachLayer(function (l) { if (l instanceof L.Tooltip) open.push(l); });
+        open.forEach(function (t) { t.close(); });
+    });
 }
 
-// Seleciona a região como num clique simples: quadrado de foco + tooltip de posição.
-// Se o nome for conhecido (pesquisa), ele é mostrado no mesmo tooltip.
-function selectRegion(lat, lng, name) {
-    clearTooltip();
-    setFocusOnCoord(lat, lng);
+// Abre o tooltip de um tile no mapa dado: nome (se conhecido) em negrito + coordenadas x,y
+function openTileTooltip(map, lat, lng, name) {
     const coords = lng + ',' + lat;
     let content = coords;
     if (name) {
@@ -514,11 +514,18 @@ function selectRegion(lat, lng, name) {
         content.appendChild(n);
         content.appendChild(c);
     }
-    currentTooltip = L.tooltip()
-        .setLatLng([lat + 0.5, lng])
-        .setContent(content)
-        .openOn(routeMap)
-        .setOpacity(0.9);
+    const tip = L.tooltip().setLatLng([lat + 0.5, lng]).setContent(content);
+    tip.openOn(map);
+    tip.setOpacity(0.9);   // setOpacity não devolve o tooltip, por isso não vai encadeado
+    return tip;
+}
+
+// Seleciona a região como num clique simples: quadrado de foco + tooltip de posição.
+// Se o nome for conhecido, ele é mostrado no mesmo tooltip.
+function selectRegion(lat, lng, name) {
+    clearTooltip();
+    setFocusOnCoord(lat, lng);
+    openTileTooltip(routeMap, lat, lng, name);
 }
 
 routeMap.on('click', function (e) {
@@ -570,13 +577,26 @@ function addWaypoint(lat, lng) {
 }
 
 function goToWaypoint(lat, lng) {
-    setFocusOnWaypointsMap(lat, lng);
     waypointsMap.setView(L.latLng(lat, lng));
+    setFocusOnWaypointsMap(lat, lng);
+    // nome já requisitado ao preencher a lista; se ainda não chegou, mostra x,y
+    // e atualiza quando chegar (se o mesmo waypoint continuar selecionado)
+    clearTooltip(waypointsMap);
+    openTileTooltip(waypointsMap, lat, lng, knownNames.get(coordKey(lat, lng)));
+    if (!knownNames.has(coordKey(lat, lng))) {
+        lookupRegion(lat, lng).then(function (name) {
+            if (name && lastWpCoord && lastWpCoord.lat === lat && lastWpCoord.lng === lng) {
+                clearTooltip(waypointsMap);
+                openTileTooltip(waypointsMap, lat, lng, name);
+            }
+        });
+    }
 }
 
 function setFocusOnWaypointsMap(lat, lng) {
     if (wpFocus) wpFocus.remove();
     wpFocus = drawFocusSquare(waypointsMap, lat, lng);
+    lastWpCoord = { lat: lat, lng: lng };
 }
 
 waypointsMap.on('click', function (e) {
