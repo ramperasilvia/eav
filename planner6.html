@@ -58,17 +58,9 @@ div#region-search input[type=text] { box-sizing: border-box; flex: 1; min-width:
 div#region-search input[type=text]::placeholder { color: #b8cdd8; }
 div#region-search input[type=button] { box-sizing: border-box; width: 60px; }
 div#sMsg { color: #eac600; min-height: 1.2em; margin-top: 4px; font-size: 14px; }
-div#search-box {
-    width: 220px;
-    padding: 8px 16px 0 8px;
-    display: inline-grid;
-    float: right;
-    background-color: #d49a00;
-    position: relative;
-}
 div#waypoint-list-box {
     width: 220px;
-    padding: 0 16px 8px 8px;
+    padding: 8px 16px 8px 8px;
     display: inline-grid;
     float: right;
     background-color: #d49a00;
@@ -99,7 +91,7 @@ select#rLSelect option:checked {
 }
 select#wpLSelect {
     font: inherit;
-    height: 350px;
+    height: 400px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -127,13 +119,7 @@ input {
     cursor: pointer;
     color: black;
 }
-input#x, input#y {
-    width: 90px;
-    background-color: #336278;
-    color: white;
-}
 label { color: white; padding: 5px 5px 5px 0; }
-div#buttonsSubmit { padding: 5px 5px 5px 0; }
 input#validate { padding: 5px; width: 220px; display: inline-grid; float: left; }
 div#validatediv { padding: 10px 0; width: 220px; display: inline-grid; float: left; }
 </style>
@@ -170,22 +156,12 @@ div#validatediv { padding: 10px 0; width: 220px; display: inline-grid; float: le
         </div>
 
         <div id="col-2">
-            <div id="search-box">
-                <label>Waypoint:<br></label>
-                <div id="wp_boxes">
-                    <input type="text" id="x" name="x">
-                    <input type="text" id="y" name="y">
-                    <form id="sendData" action="" method="GET">
-                        <input type="hidden" id="c" name="c" value="">
-                        <input type="hidden" id="rL" name="rL" value="">
-                        <input type="hidden" id="wL" name="wL" value="">
-                        <input type="hidden" id="hiU" name="hiU" value="">
-                        <div id="buttonsSubmit">
-                            <input type="submit" value="Search!">
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <form id="sendData" action="" method="GET" style="display:none">
+                <input type="hidden" id="c" name="c" value="">
+                <input type="hidden" id="rL" name="rL" value="">
+                <input type="hidden" id="wL" name="wL" value="">
+                <input type="hidden" id="hiU" name="hiU" value="">
+            </form>
 
             <div id="waypoint-list-box">
                 <label>Waypoints</label>
@@ -229,11 +205,10 @@ let routeLayers = [];     // camadas (linhas + preenchimento) da rota, nos dois 
 let waypointLayers = [];  // camadas dos waypoints, nos dois mapas
 
 let coordFocus = null;
+let lastCoord = null;   // última região selecionada; vai no parâmetro c do formulário
 let wpFocus = null;
 
 // ---------- Elementos ----------
-const xInput = document.getElementById('x');
-const yInput = document.getElementById('y');
 const rLSelect = document.getElementById('rLSelect');
 const wpLSelect = document.getElementById('wpLSelect');
 const form = document.getElementById('sendData');
@@ -472,15 +447,29 @@ function goToCoord(lat, lng) {
 function setFocusOnCoord(lat, lng) {
     if (coordFocus) coordFocus.remove();
     coordFocus = drawFocusSquare(routeMap, lat, lng);
+    lastCoord = { lat: lat, lng: lng };
 }
 
 // ---------- Eventos do mapa da rota ----------
-// Seleciona a região como num clique simples: quadrado de foco + tooltip com as coordenadas
-function selectRegion(lat, lng) {
+// Seleciona a região como num clique simples: quadrado de foco + tooltip de posição.
+// Se o nome for conhecido (pesquisa), ele é mostrado no mesmo tooltip.
+function selectRegion(lat, lng, name) {
     setFocusOnCoord(lat, lng);
+    const coords = lng + ',' + lat;
+    let content = coords;
+    if (name) {
+        content = document.createElement('div');
+        const n = document.createElement('div');
+        n.style.fontWeight = 'bold';
+        n.textContent = name;
+        const c = document.createElement('div');
+        c.textContent = coords;
+        content.appendChild(n);
+        content.appendChild(c);
+    }
     L.tooltip()
         .setLatLng([lat + 0.5, lng])
-        .setContent(lng + ',' + lat)
+        .setContent(content)
         .openOn(routeMap)
         .setOpacity(0.9);
 }
@@ -563,23 +552,10 @@ const sMsg = document.getElementById('sMsg');
 
 function setSearchMsg(text) { sMsg.textContent = text || ''; }
 
-// Balão no tile com o nome da região
-function showRegionBalloon(lat, lng, name) {
-    const box = document.createElement('div');
-    box.style.fontFamily = 'Verdana, sans-serif';
-    box.style.fontWeight = 'bold';
-    box.textContent = name;
-    L.popup({ autoPan: false })
-        .setLatLng([lat + 1, lng + 0.5])
-        .setContent(box)
-        .openOn(routeMap);
-}
-
-// Centraliza o mapa da esquerda, seleciona a região e abre o balão
+// Centraliza o mapa da esquerda e seleciona a região (nome no tooltip de posição)
 function showFoundRegion(lat, lng, name) {
     routeMap.setView(L.latLng(lat + 0.5, lng + 0.5), routeMap.getZoom());
-    selectRegion(lat, lng);
-    showRegionBalloon(lat, lng, name);
+    selectRegion(lat, lng, name);
     sName.value = name;
     sX.value = lng;
     sY.value = lat;
@@ -634,7 +610,7 @@ document.getElementById('sCoordBtn').addEventListener('click', searchByCoord);
 function populateAllHidden() {
     rLHidden.value = serializeList(route);
     wLHidden.value = serializeList(waypoints);
-    cHidden.value = yInput.value + 'z' + xInput.value;
+    if (lastCoord) cHidden.value = lastCoord.lat + 'z' + lastCoord.lng;
 }
 
 function submitForm() {
@@ -655,8 +631,6 @@ document.getElementById('validate').addEventListener('click', submitForm);
 // ---------- Carga inicial ----------
 if (coordFromUrl) {
     const c = coordFromUrl.split('z');
-    yInput.value = c[0];
-    xInput.value = c[1];
     const lat = parseInt(c[0]);
     const lng = parseInt(c[1]);
     if (!isNaN(lat) && !isNaN(lng)) {
