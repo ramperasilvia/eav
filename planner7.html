@@ -182,9 +182,10 @@ div#validatediv { padding: 10px 0; width: 220px; display: inline-grid; float: le
 
 // ---------- Configuração ----------
 const ROUTE_FILL = true; // preenchimento leve (sem borda) dentro das regiões da rota
-const ROUTE_EDGE_STYLE = { color: '#eac600', weight: 3, opacity: 1 };
+const ROUTE_EDGE_STYLE = { color: '#eac600', weight: 3, opacity: 1 };        // mapa da direita
+const ROUTE_EDGE_STYLE_LEFT = { color: 'white', weight: 3, opacity: 1 };      // mapa da esquerda
 const ROUTE_FILL_STYLE = { stroke: false, fillColor: 'white', fillOpacity: 0.3 };
-const ROUTE_END_FILL_STYLE = { stroke: false, fillColor: '#90ee90', fillOpacity: 0.5 }; // primeira e última (mapa da esquerda)
+const ROUTE_END_FILL_STYLE = { stroke: false, fillColor: '#90ee90', fillOpacity: 0.5 }; // primeira e última (nos dois mapas)
 const WP_STYLE = { color: '#eac600', fillColor: '#eac600', fillOpacity: 0.7 };
 
 // ---------- Mapas ----------
@@ -381,7 +382,7 @@ function redrawRoute() {
     [routeMap, waypointsMap].forEach(function (map) {
         route.forEach(function (p, i) {
             const isEnd = (i === 0 || i === route.length - 1);
-            if (map === routeMap && isEnd) {
+            if (isEnd) {
                 routeLayers.push(drawSquare(map, p.lat, p.lng, ROUTE_END_FILL_STYLE));
             } else if (ROUTE_FILL) {
                 routeLayers.push(drawSquare(map, p.lat, p.lng, ROUTE_FILL_STYLE));
@@ -390,7 +391,8 @@ function redrawRoute() {
                 const j = indexByKey.get(coordKey(p.lat + s[0], p.lng + s[1]));
                 const consecutive = j !== undefined && Math.abs(i - j) === 1;
                 if (!consecutive) {
-                    routeLayers.push(L.polyline([s[2], s[3]], ROUTE_EDGE_STYLE).addTo(map));
+                    routeLayers.push(L.polyline([s[2], s[3]],
+                        map === routeMap ? ROUTE_EDGE_STYLE_LEFT : ROUTE_EDGE_STYLE).addTo(map));
                 }
             });
         });
@@ -419,9 +421,17 @@ function populateRouteSelect() {
     fillRegionSelect(rLSelect, route);
 }
 
-rLSelect.addEventListener('change', function () {
+// Cada clique num item da rota (inclusive no já selecionado) centraliza o mapa da esquerda
+// e mostra o tooltip do tile com o nome da região. As setas do teclado também funcionam.
+function onRouteListPick() {
     const p = route[rLSelect.selectedIndex];
     if (p) goToCoord(p.lat, p.lng);
+}
+rLSelect.addEventListener('click', onRouteListPick);
+rLSelect.addEventListener('keyup', function (e) {
+    if (['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].indexOf(e.key) !== -1) {
+        onRouteListPick();
+    }
 });
 
 function refreshRoute() {
@@ -459,8 +469,17 @@ function addRouteCoord(lat, lng) {
 }
 
 function goToCoord(lat, lng) {
-    setFocusOnCoord(lat, lng);
     routeMap.setView(L.latLng(lat, lng));
+    // usa o nome já requisitado ao preencher a lista; se ainda não chegou, mostra x,y
+    // e atualiza o tooltip quando o nome chegar (se o tile continuar selecionado)
+    selectRegion(lat, lng, knownNames.get(coordKey(lat, lng)));
+    if (!knownNames.has(coordKey(lat, lng))) {
+        lookupRegion(lat, lng).then(function (name) {
+            if (name && lastCoord && lastCoord.lat === lat && lastCoord.lng === lng) {
+                selectRegion(lat, lng, name);
+            }
+        });
+    }
 }
 
 function setFocusOnCoord(lat, lng) {
