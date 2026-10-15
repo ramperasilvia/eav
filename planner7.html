@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="sl.mapapi2.js"></script>
+<link rel="stylesheet" type="text/css" href="sl.mapapi2.css">
+<style>
+body {
+    margin: 0;
+    border: 0;
+    background-color: #1d475f;
+    font-family: Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+}
+div#map-container {
+    width: 1500px;
+    height: 1000px;
+    padding: 8px 8px 8px 16px;
+    display: inline-block;
+    background-color: #1d475f;
+    float: left;
+    position: absolute;
+}
+div#left-side {
+    width: 520px;
+    display: inline-block;
+    float: right;
+    background-color: #1d475f;
+    position: relative;
+}
+div#columns {
+    width: 500px;
+    display: inline-block;
+    float: right;
+    position: relative;
+}
+div#col-2 { display: inline-block; }
+div#col-1 { display: inline-block; float: left; }
+div#map-container2 {
+    width: 500px;
+    height: 500px;
+    padding: 8px;
+    display: inline-block;
+    float: right;
+    background-color: #d49a00;
+    position: relative;
+}
+div#region-search {
+    box-sizing: border-box;
+    width: 516px;
+    padding: 8px;
+    float: right;
+    background-color: #1d475f;
+}
+div#region-search .srow { display: flex; gap: 6px; margin-top: 4px; }
+div#region-search input[type=text] { box-sizing: border-box; flex: 1; min-width: 0; width: auto; background-color: #336278; color: white; cursor: text; }
+div#region-search input[type=text]::placeholder { color: #b8cdd8; }
+div#region-search input[type=button] { box-sizing: border-box; width: 60px; }
+div#sMsg { color: #eac600; min-height: 1.2em; margin-top: 4px; font-size: 14px; }
+div#waypoint-list-box {
+    width: 220px;
+    padding: 8px 16px 8px 8px;
+    display: inline-grid;
+    float: right;
+    background-color: #d49a00;
+    position: relative;
+}
+div#points-list-box {
+    width: 220px;
+    padding: 8px 16px 8px 8px;
+    display: inline-grid;
+    float: left;
+    background-color: #1d475f;
+    position: relative;
+}
+select#rLSelect {
+    font: inherit;
+    height: 400px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #336278;
+    cursor: pointer;
+}
+select#rLSelect option { font-weight: bold; color: white; }
+select#rLSelect option:hover,
+select#rLSelect option:checked {
+    color: black;
+    background-color: #eac600;
+}
+select#wpLSelect {
+    font: inherit;
+    height: 400px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #eac600;
+    cursor: pointer;
+}
+select#wpLSelect option { font-weight: bold; color: black; }
+select#wpLSelect option:hover,
+select#wpLSelect option:checked {
+    color: white;
+    background-color: #336278;
+}
+select:focus {
+    outline: none;
+    border-color: dodgerblue;
+    box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.25);
+}
+input {
+    font: inherit;
+    width: 210px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #eac600;
+    cursor: pointer;
+    color: black;
+}
+label { color: white; padding: 5px 5px 5px 0; }
+input#validate { padding: 5px; width: 220px; display: inline-grid; float: left; }
+div#validatediv { padding: 10px 0; width: 220px; display: inline-grid; float: left; }
+</style>
+</head>
+<body>
+
+<div id="map-container"></div>
+<div id="left-side">
+    <div id="region-search">
+        <label>Search region</label>
+        <div class="srow">
+            <input type="text" id="sName" placeholder="Region name">
+            <input type="button" id="sNameBtn" value="Go">
+        </div>
+        <div class="srow">
+            <input type="text" id="sX" placeholder="x">
+            <input type="text" id="sY" placeholder="y">
+            <input type="button" id="sCoordBtn" value="Go">
+        </div>
+        <div id="sMsg"></div>
+    </div>
+
+    <div id="map-container2"></div>
+
+    <div id="columns">
+        <div id="col-1">
+            <div id="points-list-box">
+                <label>Route</label>
+                <select id="rLSelect" name="rLSelect" size="20"></select>
+                <div id="validatediv">
+                    <input type="button" id="validate" value="Validate Route!">
+                </div>
+            </div>
+        </div>
+
+        <div id="col-2">
+            <form id="sendData" action="" method="GET" style="display:none">
+                <input type="hidden" id="c" name="c" value="">
+                <input type="hidden" id="rL" name="rL" value="">
+                <input type="hidden" id="wL" name="wL" value="">
+                <input type="hidden" id="hiU" name="hiU" value="">
+            </form>
+
+            <div id="waypoint-list-box">
+                <label>Waypoints</label>
+                <select id="wpLSelect" name="wpLSelect" size="16"></select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/*
+ * Convenção de coordenadas (mantida do original, para não quebrar o LSL):
+ *   lat = primeiro valor nas listas/URL (eixo Y do SL)
+ *   lng = segundo valor (eixo X do SL)
+ * Formato dos dados: "latZlng" separados por "X"  (ex.: 1000z1001X1000z1002)
+ * Na interface as coordenadas aparecem como "lng,lat" (= x,y do SL).
+ */
+
+// ---------- Configuração ----------
+const ROUTE_FILL = true; // preenchimento leve (sem borda) dentro das regiões da rota
+const ROUTE_EDGE_STYLE = { color: '#eac600', weight: 3, opacity: 1 };
+const ROUTE_FILL_STYLE = { stroke: false, fillColor: 'white', fillOpacity: 0.3 };
+const ROUTE_END_FILL_STYLE = { stroke: false, fillColor: '#90ee90', fillOpacity: 0.5 }; // primeira e última (mapa da esquerda)
+const WP_STYLE = { color: '#eac600', fillColor: '#eac600', fillOpacity: 0.7 };
+
+// ---------- Mapas ----------
+const latlngStart = L.latLng(1000, 1000);
+
+const routeMap = new SLMap(document.getElementById('map-container'));
+routeMap.setView(latlngStart, 7);
+const waypointsMap = new SLMap(document.getElementById('map-container2'));
+waypointsMap.setView(latlngStart, 5);
+
+routeMap.doubleClickZoom.disable();
+waypointsMap.doubleClickZoom.disable();
+
+// ---------- Estado ----------
+let route = [];      // [{lat, lng}]
+let waypoints = [];  // [{lat, lng}]
+
+let routeLayers = [];     // camadas (linhas + preenchimento) da rota, nos dois mapas
+let waypointLayers = [];  // camadas dos waypoints, nos dois mapas
+
+let coordFocus = null;
+let lastCoord = null;   // última região selecionada; vai no parâmetro c do formulário
+let wpFocus = null;
+
+// ---------- Elementos ----------
+const rLSelect = document.getElementById('rLSelect');
+const wpLSelect = document.getElementById('wpLSelect');
+const form = document.getElementById('sendData');
+const cHidden = document.getElementById('c');
+const rLHidden = document.getElementById('rL');
+const wLHidden = document.getElementById('wL');
+const hiuHidden = document.getElementById('hiU');
+
+// ---------- Parâmetros da URL ----------
+const urlParams = new URLSearchParams(window.location.search);
+const coordFromUrl = urlParams.get('c');
+const routeListFromUrl = urlParams.get('rL');
+const waypointListFromUrl = urlParams.get('wL');
+const httpInUrl = urlParams.get('hiU');
+
+// Só aceita https:// no destino (evita XSS e envio para destinos arbitrários)
+const httpInValid = !!httpInUrl && /^https:\/\//i.test(httpInUrl);
+if (httpInValid) form.action = httpInUrl;
+hiuHidden.value = httpInUrl || '';
+rLHidden.value = routeListFromUrl || '';
+wLHidden.value = waypointListFromUrl || '';
+cHidden.value = coordFromUrl || '';
+
+// ---------- Utilidades ----------
+function parseList(str) {
+    if (!str) return [];
+    return str.split('X').map(function (item) {
+        const p = item.split('z');
+        return { lat: parseInt(p[0]), lng: parseInt(p[1]) };
+    }).filter(function (p) { return !isNaN(p.lat) && !isNaN(p.lng); });
+}
+
+function serializeList(list) {
+    return list.map(function (p) { return p.lat + 'z' + p.lng; }).join('X');
+}
+
+function sameCoord(a, b) { return a.lat === b.lat && a.lng === b.lng; }
+function coordKey(lat, lng) { return lat + ',' + lng; }
+function indexIn(list, lat, lng) {
+    return list.findIndex(function (p) { return p.lat === lat && p.lng === lng; });
+}
+// vizinhas pelos lados (sem diagonais)
+function isAdjacent(a, b) {
+    return Math.abs(a.lat - b.lat) + Math.abs(a.lng - b.lng) === 1;
+}
+
+function drawSquare(map, lat, lng, opts) {
+    return L.polygon([[lat, lng], [lat, lng + 1], [lat + 1, lng + 1], [lat + 1, lng]], opts).addTo(map);
+}
+
+function drawFocusSquare(map, lat, lng) {
+    return L.polyline([[lat, lng], [lat, lng + 1], [lat + 1, lng + 1], [lat + 1, lng], [lat, lng]],
+        { color: 'white', weight: 3 }).addTo(map);
+}
+
+// ---------- Consultas de região (endpoints da Map API do SL) ----------
+// As respostas chegam por variáveis globais (JSONP), por isso as consultas são serializadas.
+// A página não usa o popup nativo do clique, então ele é desativado.
+window.gotoSLURL = function () {};
+
+const CAP_BASE = $.sl.maps.config.capability_base_url + 'cap/0/';
+const CAP_COORDS_TO_NAME = CAP_BASE + 'b713fe80-283b-4585-af4d-a3b7d9a32492'; // grid_x, grid_y -> nome
+const CAP_NAME_TO_COORDS = CAP_BASE + 'd661249b-2b5a-4436-966a-3d3b8d7a574f'; // sim_name -> {x, y}
+const REGION_TIMEOUT_MS = 5000;
+const regionCache = new Map();     // "lat,lng" -> Promise<nome|null|undefined>
+const knownNames = new Map();      // "lat,lng" -> nome (consulta já resolvida)
+const nameCache = new Map();       // nome em minúsculas -> Promise<{lat,lng}|null|undefined>
+let capQueue = Promise.resolve();
+
+// Carrega um script JSONP. Resolve com {value} se carregou, ou undefined em falha/timeout.
+function loadCap(url, varName) {
+    return new Promise(function (resolve) {
+        let done = false;
+        const script = document.createElement('script');
+        function finish(result) {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            script.remove();
+            resolve(result);
+        }
+        const timer = setTimeout(function () { finish(undefined); }, REGION_TIMEOUT_MS);
+        window[varName] = undefined;
+        script.onload = function () { finish({ value: window[varName] }); };
+        script.onerror = function () { finish(undefined); };
+        script.src = url;
+        document.body.appendChild(script);
+    });
+}
+
+function queueCap(fn) {
+    const p = capQueue.then(fn);
+    capQueue = p;
+    return p;
+}
+
+// Resolve com o nome (existe), null (não existe) ou undefined (falha de rede/timeout)
+function lookupRegion(lat, lng) {
+    const key = coordKey(lat, lng);
+    if (!regionCache.has(key)) {
+        const p = queueCap(function () {
+            return loadCap(CAP_COORDS_TO_NAME + '?var=slRegionName&grid_x=' + lng + '&grid_y=' + lat,
+                           'slRegionName').then(function (r) {
+                if (r === undefined) return undefined;
+                const n = r.value;
+                return (n && !n.error) ? n : null;
+            });
+        });
+        regionCache.set(key, p);
+        p.then(function (r) {
+            if (r === undefined) regionCache.delete(key); // não guarda falhas
+            else if (typeof r === 'string') knownNames.set(key, r);
+        });
+    }
+    return regionCache.get(key);
+}
+
+// Resolve com {lat, lng} (existe), null (não existe) ou undefined (falha de rede/timeout)
+function lookupRegionByName(name) {
+    const key = name.trim().toLowerCase();
+    if (!nameCache.has(key)) {
+        const p = queueCap(function () {
+            return loadCap(CAP_NAME_TO_COORDS + '?var=slRegionPos&sim_name=' + encodeURIComponent(name.trim()),
+                           'slRegionPos').then(function (r) {
+                if (r === undefined) return undefined;
+                const v = r.value;
+                if (v && !v.error && typeof v.x === 'number' && typeof v.y === 'number') {
+                    return { lat: v.y, lng: v.x };
+                }
+                return null;
+            });
+        });
+        nameCache.set(key, p);
+        p.then(function (r) { if (r === undefined) nameCache.delete(key); });
+    }
+    return nameCache.get(key);
+}
+
+// true somente se a região existe; qualquer outro resultado falha em silêncio
+async function regionExists(lat, lng) {
+    return !!(await lookupRegion(lat, lng));
+}
+
+// ---------- Desenho da rota: 4 linhas por região, sem a divisa entre vizinhas ----------
+function clearLayers(layers) {
+    layers.forEach(function (l) { l.remove(); });
+    layers.length = 0;
+}
+
+// Cada lado: [deslocamento lat, deslocamento lng, ponto A, ponto B]
+function squareSides(lat, lng) {
+    return [
+        [-1, 0, [lat, lng],         [lat, lng + 1]],         // sul   (vizinha lat-1)
+        [ 1, 0, [lat + 1, lng],     [lat + 1, lng + 1]],     // norte (vizinha lat+1)
+        [ 0, -1, [lat, lng],        [lat + 1, lng]],         // oeste (vizinha lng-1)
+        [ 0, 1, [lat, lng + 1],     [lat + 1, lng + 1]]      // leste (vizinha lng+1)
+    ];
+}
+
+// Redesenha todas as linhas da rota. Um lado só deixa de ser desenhado se a região
+// vizinha daquele lado for a anterior ou a próxima NA LISTA da rota (índices consecutivos).
+// Vizinhas geográficas que não são consecutivas (ex.: as pontas de um U) mantêm a linha.
+function redrawRoute() {
+    clearLayers(routeLayers);
+
+    const indexByKey = new Map();
+    route.forEach(function (p, i) { indexByKey.set(coordKey(p.lat, p.lng), i); });
+
+    [routeMap, waypointsMap].forEach(function (map) {
+        route.forEach(function (p, i) {
+            const isEnd = (i === 0 || i === route.length - 1);
+            if (map === routeMap && isEnd) {
+                routeLayers.push(drawSquare(map, p.lat, p.lng, ROUTE_END_FILL_STYLE));
+            } else if (ROUTE_FILL) {
+                routeLayers.push(drawSquare(map, p.lat, p.lng, ROUTE_FILL_STYLE));
+            }
+            squareSides(p.lat, p.lng).forEach(function (s) {
+                const j = indexByKey.get(coordKey(p.lat + s[0], p.lng + s[1]));
+                const consecutive = j !== undefined && Math.abs(i - j) === 1;
+                if (!consecutive) {
+                    routeLayers.push(L.polyline([s[2], s[3]], ROUTE_EDGE_STYLE).addTo(map));
+                }
+            });
+        });
+    });
+}
+
+// ---------- Lista da rota (select) ----------
+// Preenche um select com a lista de regiões: o texto mostrado é o nome da região
+// (enquanto não é conhecido, mostra x,y) e o value guarda a coordenada no formato do GET (latZlng).
+function fillRegionSelect(select, list) {
+    select.options.length = 0;
+    list.forEach(function (p) {
+        const option = document.createElement('option');
+        option.value = p.lat + 'z' + p.lng;
+        option.textContent = knownNames.get(coordKey(p.lat, p.lng)) || (p.lng + ',' + p.lat);
+        select.appendChild(option);
+        if (!knownNames.has(coordKey(p.lat, p.lng))) {
+            lookupRegion(p.lat, p.lng).then(function (name) {
+                if (name && option.isConnected) option.textContent = name;
+            });
+        }
+    });
+}
+
+function populateRouteSelect() {
+    fillRegionSelect(rLSelect, route);
+}
+
+rLSelect.addEventListener('change', function () {
+    const p = route[rLSelect.selectedIndex];
+    if (p) goToCoord(p.lat, p.lng);
+});
+
+function refreshRoute() {
+    redrawRoute();
+    populateRouteSelect();
+}
+
+// ---------- Lógica da rota ----------
+function addRouteCoord(lat, lng) {
+    const p = { lat: lat, lng: lng };
+    const idx = indexIn(route, lat, lng);
+
+    if (idx !== -1) {
+        // já existe: só pode remover a primeira ou a última
+        if (idx === 0 || idx === route.length - 1) {
+            route.splice(idx, 1);
+            refreshRoute();
+        }
+        return;
+    }
+
+    if (route.length === 0) {
+        route.push(p);
+    } else if (route.length === 1) {
+        if (isAdjacent(route[0], p)) route.push(p);
+        else route[0] = p; // não é vizinha: troca o ponto inicial
+    } else if (isAdjacent(route[route.length - 1], p)) {
+        route.push(p);
+    } else if (isAdjacent(route[0], p)) {
+        route.unshift(p);
+    } else {
+        return;
+    }
+    refreshRoute();
+}
+
+function goToCoord(lat, lng) {
+    setFocusOnCoord(lat, lng);
+    routeMap.setView(L.latLng(lat, lng));
+}
+
+function setFocusOnCoord(lat, lng) {
+    if (coordFocus) coordFocus.remove();
+    coordFocus = drawFocusSquare(routeMap, lat, lng);
+    lastCoord = { lat: lat, lng: lng };
+}
+
+// ---------- Eventos do mapa da rota ----------
+// Seleciona a região como num clique simples: quadrado de foco + tooltip de posição.
+// Se o nome for conhecido (pesquisa), ele é mostrado no mesmo tooltip.
+function selectRegion(lat, lng, name) {
+    setFocusOnCoord(lat, lng);
+    const coords = lng + ',' + lat;
+    let content = coords;
+    if (name) {
+        content = document.createElement('div');
+        const n = document.createElement('div');
+        n.style.fontWeight = 'bold';
+        n.textContent = name;
+        const c = document.createElement('div');
+        c.textContent = coords;
+        content.appendChild(n);
+        content.appendChild(c);
+    }
+    L.tooltip()
+        .setLatLng([lat + 0.5, lng])
+        .setContent(content)
+        .openOn(routeMap)
+        .setOpacity(0.9);
+}
+
+routeMap.on('click', function (e) {
+    selectRegion(parseInt(e.latlng.lat), parseInt(e.latlng.lng));
+});
+
+routeMap.on('dblclick', async function (e) {
+    const lat = parseInt(e.latlng.lat);
+    const lng = parseInt(e.latlng.lng);
+    setFocusOnCoord(lat, lng);
+    // região já na rota: segue direto (permite remover); nova: só adiciona se existir
+    if (indexIn(route, lat, lng) === -1 && !(await regionExists(lat, lng))) return;
+    addRouteCoord(lat, lng);
+});
+
+// ---------- Waypoints ----------
+function redrawWaypoints() {
+    clearLayers(waypointLayers);
+    waypoints.forEach(function (p) {
+        waypointLayers.push(drawSquare(routeMap, p.lat, p.lng, WP_STYLE));
+        waypointLayers.push(drawSquare(waypointsMap, p.lat, p.lng, WP_STYLE));
+    });
+    // mantém o foco acima das camadas
+    if (wpFocus) wpFocus.bringToFront();
+}
+
+function populateWaypointSelect() {
+    fillRegionSelect(wpLSelect, waypoints);
+}
+
+wpLSelect.addEventListener('change', function () {
+    const p = waypoints[wpLSelect.selectedIndex];
+    if (p) goToWaypoint(p.lat, p.lng);
+});
+
+function addWaypoint(lat, lng) {
+    const idx = indexIn(waypoints, lat, lng);
+    if (idx === -1) waypoints.push({ lat: lat, lng: lng });
+    else waypoints.splice(idx, 1);
+    redrawWaypoints();
+    populateWaypointSelect();
+}
+
+function goToWaypoint(lat, lng) {
+    setFocusOnWaypointsMap(lat, lng);
+    waypointsMap.setView(L.latLng(lat, lng));
+}
+
+function setFocusOnWaypointsMap(lat, lng) {
+    if (wpFocus) wpFocus.remove();
+    wpFocus = drawFocusSquare(waypointsMap, lat, lng);
+}
+
+waypointsMap.on('click', function (e) {
+    setFocusOnWaypointsMap(parseInt(e.latlng.lat), parseInt(e.latlng.lng));
+});
+
+waypointsMap.on('dblclick', async function (e) {
+    const lat = parseInt(e.latlng.lat);
+    const lng = parseInt(e.latlng.lng);
+    setFocusOnWaypointsMap(lat, lng);
+    // waypoint já existente: segue direto (remove); novo: só adiciona se a região existir
+    if (indexIn(waypoints, lat, lng) === -1 && !(await regionExists(lat, lng))) return;
+    addWaypoint(lat, lng);
+});
+
+// ---------- Pesquisa de região (por nome ou por coordenada x,y) ----------
+const sName = document.getElementById('sName');
+const sX = document.getElementById('sX');
+const sY = document.getElementById('sY');
+const sMsg = document.getElementById('sMsg');
+
+function setSearchMsg(text) { sMsg.textContent = text || ''; }
+
+// Centraliza o mapa da esquerda e seleciona a região (nome no tooltip de posição)
+function showFoundRegion(lat, lng, name) {
+    routeMap.setView(L.latLng(lat + 0.5, lng + 0.5), routeMap.getZoom());
+    selectRegion(lat, lng, name);
+    sName.value = name;
+    sX.value = lng;
+    sY.value = lat;
+    setSearchMsg('');
+}
+
+async function searchByName() {
+    const typed = sName.value.trim();
+    if (!typed) return;
+    setSearchMsg('Searching...');
+    const pos = await lookupRegionByName(typed);
+    if (!pos) {
+        setSearchMsg(pos === null ? 'Region not found' : 'Search failed, try again');
+        return;
+    }
+    // nome oficial (maiúsculas/minúsculas corretas); se falhar, usa o digitado
+    const official = await lookupRegion(pos.lat, pos.lng);
+    showFoundRegion(pos.lat, pos.lng, official || typed);
+}
+
+async function searchByCoord() {
+    const xs = sX.value.trim();
+    const ys = sY.value.trim();
+    const max = $.sl.maps.config.map_grid_edge_size;
+    if (!/^\d+$/.test(xs) || !/^\d+$/.test(ys) || parseInt(xs) >= max || parseInt(ys) >= max) {
+        setSearchMsg('Enter valid x and y');
+        return;
+    }
+    const lng = parseInt(xs);
+    const lat = parseInt(ys);
+    setSearchMsg('Searching...');
+    const name = await lookupRegion(lat, lng);
+    if (!name) {
+        setSearchMsg(name === null ? 'Region not found' : 'Search failed, try again');
+        return;
+    }
+    showFoundRegion(lat, lng, name);
+}
+
+function onEnter(input, fn) {
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); fn(); }
+    });
+}
+onEnter(sName, searchByName);
+onEnter(sX, searchByCoord);
+onEnter(sY, searchByCoord);
+document.getElementById('sNameBtn').addEventListener('click', searchByName);
+document.getElementById('sCoordBtn').addEventListener('click', searchByCoord);
+
+// ---------- Envio do formulário ----------
+function populateAllHidden() {
+    rLHidden.value = serializeList(route);
+    wLHidden.value = serializeList(waypoints);
+    if (lastCoord) cHidden.value = lastCoord.lat + 'z' + lastCoord.lng;
+}
+
+function submitForm() {
+    if (!httpInValid) {
+        alert('URL de destino (hiU) ausente ou inválida. Ela deve começar com https://');
+        return;
+    }
+    populateAllHidden();
+    form.submit();
+}
+
+form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitForm();
+});
+document.getElementById('validate').addEventListener('click', submitForm);
+
+// ---------- Carga inicial ----------
+if (coordFromUrl) {
+    const c = coordFromUrl.split('z');
+    const lat = parseInt(c[0]);
+    const lng = parseInt(c[1]);
+    if (!isNaN(lat) && !isNaN(lng)) {
+        routeMap.setView(L.latLng(lat, lng), 7);
+        waypointsMap.setView(L.latLng(lat, lng), 5);
+        setFocusOnCoord(lat, lng);
+    }
+}
+
+route = parseList(routeListFromUrl);
+waypoints = parseList(waypointListFromUrl);
+refreshRoute();
+redrawWaypoints();
+populateWaypointSelect();
+</script>
+</body>
+</html>
