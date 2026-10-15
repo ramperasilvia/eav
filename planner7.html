@@ -56,7 +56,7 @@ div#region-search {
 div#region-search .srow { display: flex; gap: 6px; margin-top: 4px; }
 div#region-search input[type=text] { box-sizing: border-box; flex: 1; min-width: 0; width: auto; background-color: #336278; color: white; cursor: text; }
 div#region-search input[type=text]::placeholder { color: #b8cdd8; }
-div#region-search input[type=button] { box-sizing: border-box; width: 60px; }
+div#region-search input[type=button] { box-sizing: border-box; flex: 1; min-width: 0; width: auto; }
 div#sMsg { color: #eac600; min-height: 1.2em; margin-top: 4px; font-size: 14px; }
 div#waypoint-list-box {
     width: 220px;
@@ -132,12 +132,10 @@ div#validatediv { padding: 10px 0; width: 220px; display: inline-grid; float: le
         <label>Search region</label>
         <div class="srow">
             <input type="text" id="sName" placeholder="Region name">
-            <input type="button" id="sNameBtn" value="Go">
         </div>
         <div class="srow">
-            <input type="text" id="sX" placeholder="x">
-            <input type="text" id="sY" placeholder="y">
-            <input type="button" id="sCoordBtn" value="Go">
+            <input type="button" id="sRouteBtn" value="Route">
+            <input type="button" id="sWaypointBtn" value="Waypoint">
         </div>
         <div id="sMsg"></div>
     </div>
@@ -424,6 +422,7 @@ function populateRouteSelect() {
 // Cada clique num item da rota (inclusive no já selecionado) centraliza o mapa da esquerda
 // e mostra o tooltip do tile com o nome da região. As setas do teclado também funcionam.
 function onRouteListPick() {
+    clearTooltip();
     const p = route[rLSelect.selectedIndex];
     if (p) goToCoord(p.lat, p.lng);
 }
@@ -489,9 +488,19 @@ function setFocusOnCoord(lat, lng) {
 }
 
 // ---------- Eventos do mapa da rota ----------
+// Tooltip de tile atualmente aberto (só existe um por vez)
+let currentTooltip = null;
+function clearTooltip() {
+    if (currentTooltip) {
+        currentTooltip.close();
+        currentTooltip = null;
+    }
+}
+
 // Seleciona a região como num clique simples: quadrado de foco + tooltip de posição.
 // Se o nome for conhecido (pesquisa), ele é mostrado no mesmo tooltip.
 function selectRegion(lat, lng, name) {
+    clearTooltip();
     setFocusOnCoord(lat, lng);
     const coords = lng + ',' + lat;
     let content = coords;
@@ -505,7 +514,7 @@ function selectRegion(lat, lng, name) {
         content.appendChild(n);
         content.appendChild(c);
     }
-    L.tooltip()
+    currentTooltip = L.tooltip()
         .setLatLng([lat + 0.5, lng])
         .setContent(content)
         .openOn(routeMap)
@@ -540,9 +549,16 @@ function populateWaypointSelect() {
     fillRegionSelect(wpLSelect, waypoints);
 }
 
-wpLSelect.addEventListener('change', function () {
+function onWaypointListPick() {
+    clearTooltip();
     const p = waypoints[wpLSelect.selectedIndex];
     if (p) goToWaypoint(p.lat, p.lng);
+}
+wpLSelect.addEventListener('click', onWaypointListPick);
+wpLSelect.addEventListener('keyup', function (e) {
+    if (['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].indexOf(e.key) !== -1) {
+        onWaypointListPick();
+    }
 });
 
 function addWaypoint(lat, lng) {
@@ -578,8 +594,6 @@ waypointsMap.on('dblclick', async function (e) {
 
 // ---------- Pesquisa de região (por nome ou por coordenada x,y) ----------
 const sName = document.getElementById('sName');
-const sX = document.getElementById('sX');
-const sY = document.getElementById('sY');
 const sMsg = document.getElementById('sMsg');
 
 function setSearchMsg(text) { sMsg.textContent = text || ''; }
@@ -589,42 +603,39 @@ function showFoundRegion(lat, lng, name) {
     routeMap.setView(L.latLng(lat + 0.5, lng + 0.5), routeMap.getZoom());
     selectRegion(lat, lng, name);
     sName.value = name;
-    sX.value = lng;
-    sY.value = lat;
     setSearchMsg('');
 }
 
-async function searchByName() {
+// Pesquisa a região pelo nome digitado. Resolve com {lat, lng, name} ou null (falha/não encontrada).
+async function findRegionByName() {
     const typed = sName.value.trim();
-    if (!typed) return;
+    if (!typed) return null;
+    clearTooltip();
     setSearchMsg('Searching...');
     const pos = await lookupRegionByName(typed);
     if (!pos) {
         setSearchMsg(pos === null ? 'Region not found' : 'Search failed, try again');
-        return;
+        return null;
     }
     // nome oficial (maiúsculas/minúsculas corretas); se falhar, usa o digitado
     const official = await lookupRegion(pos.lat, pos.lng);
-    showFoundRegion(pos.lat, pos.lng, official || typed);
+    return { lat: pos.lat, lng: pos.lng, name: official || typed };
 }
 
-async function searchByCoord() {
-    const xs = sX.value.trim();
-    const ys = sY.value.trim();
-    const max = $.sl.maps.config.map_grid_edge_size;
-    if (!/^\d+$/.test(xs) || !/^\d+$/.test(ys) || parseInt(xs) >= max || parseInt(ys) >= max) {
-        setSearchMsg('Enter valid x and y');
-        return;
-    }
-    const lng = parseInt(xs);
-    const lat = parseInt(ys);
-    setSearchMsg('Searching...');
-    const name = await lookupRegion(lat, lng);
-    if (!name) {
-        setSearchMsg(name === null ? 'Region not found' : 'Search failed, try again');
-        return;
-    }
-    showFoundRegion(lat, lng, name);
+// Botão Route: mapa da esquerda
+async function searchRoute() {
+    const r = await findRegionByName();
+    if (r) showFoundRegion(r.lat, r.lng, r.name);
+}
+
+// Botão Waypoint: centraliza o mapa da direita e executa um clique simples nele
+async function searchWaypoint() {
+    const r = await findRegionByName();
+    if (!r) return;
+    waypointsMap.setView(L.latLng(r.lat + 0.5, r.lng + 0.5), waypointsMap.getZoom());
+    setFocusOnWaypointsMap(r.lat, r.lng);
+    sName.value = r.name;
+    setSearchMsg('');
 }
 
 function onEnter(input, fn) {
@@ -632,11 +643,9 @@ function onEnter(input, fn) {
         if (e.key === 'Enter') { e.preventDefault(); fn(); }
     });
 }
-onEnter(sName, searchByName);
-onEnter(sX, searchByCoord);
-onEnter(sY, searchByCoord);
-document.getElementById('sNameBtn').addEventListener('click', searchByName);
-document.getElementById('sCoordBtn').addEventListener('click', searchByCoord);
+onEnter(sName, searchRoute);   // Enter = Route
+document.getElementById('sRouteBtn').addEventListener('click', searchRoute);
+document.getElementById('sWaypointBtn').addEventListener('click', searchWaypoint);
 
 // ---------- Envio do formulário ----------
 function populateAllHidden() {
