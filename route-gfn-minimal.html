@@ -5,17 +5,13 @@
 <script src="sl.mapapi2.js"></script>
 <link rel="stylesheet" type="text/css" href="sl.mapapi2.css">
 <style>
-body { margin: 0; overflow: hidden; background-color: #1d475f; font-family: Verdana, sans-serif; font-size: 16px; font-weight: bold; }
-div#map-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
-input#validate { position: fixed; top: 12px; right: 12px; z-index: 2000; width: 190px; font: inherit; box-sizing: border-box;
-                 padding: 8px; border: 1px solid #ccc; border-radius: 5px; background-color: #eac600; color: black;
-                 cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); }
+html, body { margin: 0; padding: 0; width: 1000px; height: 1000px; overflow: hidden; background-color: #1d475f; }
+div#map-container { position: absolute; top: 0; left: 0; width: 1000px; height: 1000px; }
 </style>
 </head>
 <body>
 
 <div id="map-container"></div>
-<input type="button" id="validate" value="Validate Route!">
 
 <form id="sendData" action="" method="GET" style="display:none">
     <input type="hidden" id="c" name="c" value="">
@@ -99,7 +95,6 @@ const CAP_BASE = $.sl.maps.config.capability_base_url + 'cap/0/';
 const CAP_COORDS_TO_NAME = CAP_BASE + 'b713fe80-283b-4585-af4d-a3b7d9a32492';
 const REGION_TIMEOUT_MS = 5000;
 const regionCache = new Map();   // "lat,lng" -> Promise<nome|null|undefined>
-const knownNames = new Map();    // "lat,lng" -> nome (também alimentado pelos HUBs)
 let capQueue = Promise.resolve();
 
 function loadCap(url, varName) {
@@ -138,7 +133,6 @@ function lookupRegion(lat, lng) {
         regionCache.set(key, p);
         p.then(function (r) {
             if (r === undefined) regionCache.delete(key);
-            else if (typeof r === 'string') knownNames.set(key, r);
         });
     }
     return regionCache.get(key);
@@ -211,7 +205,6 @@ function applyHubs(h) {
     hubInfo.clear();
     h.standardHubs.forEach(function (x) { hubInfo.set(coordKey(x.lat, x.lng), Object.assign({ type: 'standard' }, x)); });
     h.boostedHubs.forEach(function (x) { hubInfo.set(coordKey(x.lat, x.lng), Object.assign({ type: 'boosted' }, x)); });
-    hubInfo.forEach(function (x, key) { if (x.name) knownNames.set(key, x.name); });
 
     clearLayers(hubLayers);
     hubInfo.forEach(function (x) {
@@ -274,54 +267,11 @@ function setFocusOnCoord(lat, lng) {
     lastCoord = { lat: lat, lng: lng };
 }
 
-// ---------- Tooltip e eventos do mapa ----------
-function clearTooltip() {
-    const open = [];
-    routeMap.eachLayer(function (l) { if (l instanceof L.Tooltip) open.push(l); });
-    open.forEach(function (t) { t.close(); });
-}
-
-// Tooltip do tile: nome (se conhecido), coordenadas x,y e tipo de HUB (se for um)
-function openTileTooltip(lat, lng, name) {
-    const content = document.createElement('div');
-    function line(text, bold, color) {
-        const d = document.createElement('div');
-        d.textContent = text;
-        if (bold) d.style.fontWeight = 'bold';
-        if (color) d.style.color = color;
-        content.appendChild(d);
-    }
-    if (name) line(name, true);
-    line(lng + ',' + lat);
-    const hub = hubInfo.get(coordKey(lat, lng));
-    if (hub) {
-        if (hub.type === 'boosted') line('Boosted HUB ' + hub.multiplier.toFixed(1) + 'x', true, '#000080');
-        else line('Standard HUB', true, '#ff6600');
-    }
-    const tip = L.tooltip().setLatLng([lat + 0.5, lng]).setContent(content);
-    tip.openOn(routeMap);
-    tip.setOpacity(0.9);
-}
-
-function selectRegion(lat, lng, name) {
-    clearTooltip();
-    setFocusOnCoord(lat, lng);
-    openTileTooltip(lat, lng, name);
-}
-
-// Seleciona a região; se o nome ainda não é conhecido, busca e atualiza o tooltip
-function selectRegionWithName(lat, lng) {
-    const key = coordKey(lat, lng);
-    selectRegion(lat, lng, knownNames.get(key));
-    if (!knownNames.has(key)) {
-        lookupRegion(lat, lng).then(function (name) {
-            if (name && lastCoord && lastCoord.lat === lat && lastCoord.lng === lng) selectRegion(lat, lng, name);
-        });
-    }
-}
+// ---------- Eventos do mapa ----------
+function selectRegion(lat, lng) { setFocusOnCoord(lat, lng); }
 
 routeMap.on('click', function (e) {
-    selectRegionWithName(parseInt(e.latlng.lat), parseInt(e.latlng.lng));
+    selectRegion(parseInt(e.latlng.lat), parseInt(e.latlng.lng));
 });
 
 routeMap.on('dblclick', async function (e) {
@@ -342,7 +292,6 @@ function submitForm() {
     form.submit();
 }
 form.addEventListener('submit', function (e) { e.preventDefault(); submitForm(); });
-document.getElementById('validate').addEventListener('click', submitForm);
 
 // ---------- Carga inicial ----------
 if (coordFromUrl) {
