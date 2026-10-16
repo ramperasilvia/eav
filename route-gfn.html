@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="sl.mapapi2.js"></script>
+<link rel="stylesheet" type="text/css" href="sl.mapapi2.css">
+<style>
+body { margin: 0; overflow: hidden; background-color: #1d475f; font-family: Verdana, sans-serif; font-size: 16px; font-weight: bold; }
+div#map-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
+
+/* Painéis flutuantes sobre o mapa */
+.float { position: fixed; z-index: 2000; box-sizing: border-box; padding: 8px; border-radius: 8px;
+         background-color: rgba(29, 71, 95, 0.92); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); }
+div#region-search { top: 12px; left: 70px; width: 300px; }
+div#points-list-box { top: 12px; right: 12px; width: 230px; }
+.srow { display: flex; gap: 6px; }
+div#sMsg { color: #eac600; font-size: 14px; }
+div#sMsg:not(:empty) { margin-top: 4px; }
+
+input { font: inherit; box-sizing: border-box; padding: 5px; border: 1px solid #ccc; border-radius: 5px;
+        background-color: #eac600; color: black; cursor: pointer; }
+input#sName { flex: 1; min-width: 0; background-color: #336278; color: white; cursor: text; }
+input#sName::placeholder { color: #b8cdd8; }
+input#sGoBtn { width: 60px; }
+input#validate { width: 100%; margin-top: 8px; }
+label { color: white; padding: 5px 5px 5px 0; display: block; }
+
+select#rLSelect { font: inherit; box-sizing: border-box; width: 100%; height: min(340px, calc(100vh - 140px)); padding: 10px;
+                  border: 1px solid #ccc; border-radius: 5px; background-color: #336278; cursor: pointer; }
+select#rLSelect option { font-weight: bold; color: white; }
+select#rLSelect option:hover, select#rLSelect option:checked { color: black; background-color: #eac600; }
+select:focus { outline: none; border-color: dodgerblue; box-shadow: 0 0 0 2px rgba(30, 144, 255, 0.25); }
+</style>
+</head>
+<body>
+
+<div id="map-container"></div>
+
+<div id="region-search" class="float">
+    <div class="srow">
+        <input type="text" id="sName" placeholder="Region name">
+        <input type="button" id="sGoBtn" value="Go">
+    </div>
+    <div id="sMsg"></div>
+</div>
+
+<div id="points-list-box" class="float">
+    <label>Route</label>
+    <select id="rLSelect" name="rLSelect" size="20"></select>
+    <input type="button" id="validate" value="Validate Route!">
+</div>
+
+<form id="sendData" action="" method="GET" style="display:none">
+    <input type="hidden" id="c" name="c" value="">
+    <input type="hidden" id="rL" name="rL" value="">
+    <input type="hidden" id="hiU" name="hiU" value="">
+</form>
+
+<script>
+/*
+ * Convenção de coordenadas (mantida do original, para não quebrar o LSL):
+ *   lat = primeiro valor nas listas/URL (eixo Y do SL), lng = segundo valor (eixo X do SL)
+ * Formato dos dados: "latZlng" separados por "X"  (ex.: 1000z1001X1000z1002)
+ */
+
+// ---------- Configuração ----------
+const ROUTE_EDGE_STYLE = { color: 'white', weight: 3, opacity: 1 };
+const ROUTE_FILL_STYLE = { stroke: false, fillColor: 'white', fillOpacity: 0.3 };
+const ROUTE_END_FILL_STYLE = { stroke: false, fillColor: '#90ee90', fillOpacity: 0.5 };
+const STANDARD_HUB_STYLE = { stroke: false, fillColor: '#ff6600', fillOpacity: 0.8, interactive: false };
+const BOOSTED_HUB_STYLE = { stroke: false, fillColor: '#000080', fillOpacity: 0.8, interactive: false };
+const HUB_API = 'https://gfn-server-1.onrender.com';
+const HUB_REFRESH_MS = 60000;
+
+// ---------- Mapa ----------
+const latlngStart = L.latLng(1000, 1000);
+const routeMap = new SLMap(document.getElementById('map-container'));
+routeMap.setView(latlngStart, 7);
+routeMap.doubleClickZoom.disable();
+
+// ---------- Estado ----------
+let route = [];           // [{lat, lng}]
+let routeLayers = [];     // camadas da rota
+let hubLayers = [];       // camadas dos HUBs
+let coordFocus = null;
+let lastCoord = null;     // última região selecionada; vai no parâmetro c
+
+// ---------- Elementos ----------
+const rLSelect = document.getElementById('rLSelect');
+const form = document.getElementById('sendData');
+const cHidden = document.getElementById('c');
+const rLHidden = document.getElementById('rL');
+const hiuHidden = document.getElementById('hiU');
+
+// ---------- Parâmetros da URL ----------
+const urlParams = new URLSearchParams(window.location.search);
+const coordFromUrl = urlParams.get('c');
+const routeListFromUrl = urlParams.get('rL');
+const httpInUrl = urlParams.get('hiU');
+
+// Só aceita https:// no destino
+const httpInValid = !!httpInUrl && /^https:\/\//i.test(httpInUrl);
+if (httpInValid) form.action = httpInUrl;
+hiuHidden.value = httpInUrl || '';
+rLHidden.value = routeListFromUrl || '';
+cHidden.value = coordFromUrl || '';
+
+// ---------- Utilidades ----------
+function parseList(str) {
+    if (!str) return [];
+    return str.split('X').map(function (item) {
+        const p = item.split('z');
+        return { lat: parseInt(p[0]), lng: parseInt(p[1]) };
+    }).filter(function (p) { return !isNaN(p.lat) && !isNaN(p.lng); });
+}
+function serializeList(list) { return list.map(function (p) { return p.lat + 'z' + p.lng; }).join('X'); }
+function coordKey(lat, lng) { return lat + ',' + lng; }
+function indexIn(list, lat, lng) { return list.findIndex(function (p) { return p.lat === lat && p.lng === lng; }); }
+function isAdjacent(a, b) { return Math.abs(a.lat - b.lat) + Math.abs(a.lng - b.lng) === 1; }
+function clearLayers(layers) { layers.forEach(function (l) { l.remove(); }); layers.length = 0; }
+
+function drawSquare(map, lat, lng, opts) {
+    return L.polygon([[lat, lng], [lat, lng + 1], [lat + 1, lng + 1], [lat + 1, lng]], opts).addTo(map);
+}
+function drawFocusSquare(map, lat, lng) {
+    return L.polyline([[lat, lng], [lat, lng + 1], [lat + 1, lng + 1], [lat + 1, lng], [lat, lng]],
+        { color: 'white', weight: 3 }).addTo(map);
+}
+
+// ---------- Consultas de região (Map API do SL, via JSONP serializado) ----------
+window.gotoSLURL = function () {};
+
+const CAP_BASE = $.sl.maps.config.capability_base_url + 'cap/0/';
+const CAP_COORDS_TO_NAME = CAP_BASE + 'b713fe80-283b-4585-af4d-a3b7d9a32492';
+const CAP_NAME_TO_COORDS = CAP_BASE + 'd661249b-2b5a-4436-966a-3d3b8d7a574f';
+const REGION_TIMEOUT_MS = 5000;
+const regionCache = new Map();   // "lat,lng" -> Promise<nome|null|undefined>
+const knownNames = new Map();    // "lat,lng" -> nome (também alimentado pelos HUBs)
+const nameCache = new Map();     // nome minúsculo -> Promise<{lat,lng}|null|undefined>
+let capQueue = Promise.resolve();
+
+function loadCap(url, varName) {
+    return new Promise(function (resolve) {
+        let done = false;
+        const script = document.createElement('script');
+        function finish(result) {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            script.remove();
+            resolve(result);
+        }
+        const timer = setTimeout(function () { finish(undefined); }, REGION_TIMEOUT_MS);
+        window[varName] = undefined;
+        script.onload = function () { finish({ value: window[varName] }); };
+        script.onerror = function () { finish(undefined); };
+        script.src = url;
+        document.body.appendChild(script);
+    });
+}
+
+function queueCap(fn) {
+    const p = capQueue.then(fn);
+    capQueue = p;
+    return p;
+}
+
+// Resolve com o nome (existe), null (não existe) ou undefined (falha/timeout)
+function lookupRegion(lat, lng) {
+    const key = coordKey(lat, lng);
+    if (!regionCache.has(key)) {
+        const p = queueCap(function () {
+            return loadCap(CAP_COORDS_TO_NAME + '?var=slRegionName&grid_x=' + lng + '&grid_y=' + lat,
+                           'slRegionName').then(function (r) {
+                if (r === undefined) return undefined;
+                const n = r.value;
+                return (n && !n.error) ? n : null;
+            });
+        });
+        regionCache.set(key, p);
+        p.then(function (r) {
+            if (r === undefined) regionCache.delete(key);
+            else if (typeof r === 'string') knownNames.set(key, r);
+        });
+    }
+    return regionCache.get(key);
+}
+
+// Resolve com {lat, lng} (existe), null (não existe) ou undefined (falha/timeout)
+function lookupRegionByName(name) {
+    const key = name.trim().toLowerCase();
+    if (!nameCache.has(key)) {
+        const p = queueCap(function () {
+            return loadCap(CAP_NAME_TO_COORDS + '?var=slRegionPos&sim_name=' + encodeURIComponent(name.trim()),
+                           'slRegionPos').then(function (r) {
+                if (r === undefined) return undefined;
+                const v = r.value;
+                if (v && !v.error && typeof v.x === 'number' && typeof v.y === 'number') return { lat: v.y, lng: v.x };
+                return null;
+            });
+        });
+        nameCache.set(key, p);
+        p.then(function (r) { if (r === undefined) nameCache.delete(key); });
+    }
+    return nameCache.get(key);
+}
+
+async function regionExists(lat, lng) { return !!(await lookupRegion(lat, lng)); }
+
+// ---------- HUBs (Standard = laranja, Boosted = azul navy) ----------
+const hubInfo = new Map();   // "lat,lng" -> {type, name, multiplier, expires}
+
+async function fetchValue(id) {
+    try {
+        const res = await fetch(HUB_API + '/get?id=' + encodeURIComponent(id));
+        if (!res.ok) return '';
+        const data = await res.json();
+        return data.value !== undefined ? data.value : (typeof data === 'string' ? data : '');
+    } catch (e) { return ''; }
+}
+
+// Devolve { standardHubs: [...], boostedHubs: [...] } ou null se a API não respondeu
+async function loadHubs() {
+    const serversRaw = await fetchValue('SERVERS');
+    const continents = serversRaw ? serversRaw.split('ç').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    if (!continents.length) return null;
+
+    const hubs = [];
+    await Promise.all(continents.map(async function (cont) {
+        const res = await Promise.all([fetchValue(cont)].concat([1, 2, 3, 4, 5].map(function (i) { return fetchValue(cont + '_NAMES_' + i); })));
+        const items = res[0] ? res[0].split('ç').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+        const names = [];
+        res.slice(1).forEach(function (raw) {
+            if (raw) raw.split('ç').forEach(function (n) { names.push(n.trim()); });
+        });
+        items.forEach(function (item, i) {
+            const p = item.split('#');
+            const v = (p[1] || '<128,128,20>').replace(/[<>]/g, '').split(',').map(function (c) { return parseFloat(c) || 0; });
+            const n = names[i];
+            hubs.push({
+                uuid: (p[0] || '').trim().toLowerCase(),
+                lat: Math.floor(v[1] / 256),   // y global / 256
+                lng: Math.floor(v[0] / 256),   // x global / 256
+                name: (n && n !== 'NULL') ? n : null
+            });
+        });
+    }));
+
+    const raw = await Promise.all([fetchValue('BHUB'), fetchValue('MHUB'), fetchValue('THUB')]);
+    const bhub = raw[0] ? raw[0].split(',') : [];
+    const mhub = raw[1] ? raw[1].split(',') : [];
+    const thub = raw[2] ? raw[2].split(',') : [];
+    const boost = {};
+    bhub.forEach(function (u, i) {
+        const id = u.trim().toLowerCase();
+        if (id) boost[id] = {
+            multiplier: parseFloat((mhub[i] || '1').replace(/x/gi, '')) || 1,
+            expires: parseInt(thub[i] || '0', 10)    // 0 = sem limite
+        };
+    });
+
+    const out = { standardHubs: [], boostedHubs: [] };
+    hubs.forEach(function (h) {
+        const b = boost[h.uuid];
+        if (b) out.boostedHubs.push(Object.assign({}, h, b));
+        else out.standardHubs.push(h);
+    });
+    return out;
+}
+
+function applyHubs(h) {
+    hubInfo.clear();
+    h.standardHubs.forEach(function (x) { hubInfo.set(coordKey(x.lat, x.lng), Object.assign({ type: 'standard' }, x)); });
+    h.boostedHubs.forEach(function (x) { hubInfo.set(coordKey(x.lat, x.lng), Object.assign({ type: 'boosted' }, x)); }); // boosted prevalece
+    hubInfo.forEach(function (x, key) { if (x.name) knownNames.set(key, x.name); });
+
+    clearLayers(hubLayers);
+    hubInfo.forEach(function (x) {
+        hubLayers.push(drawSquare(routeMap, x.lat, x.lng, x.type === 'boosted' ? BOOSTED_HUB_STYLE : STANDARD_HUB_STYLE));
+    });
+    redrawRoute();                          // mantém a rota acima dos HUBs
+    if (coordFocus) coordFocus.bringToFront();
+}
+
+async function refreshHubs(first) {
+    if (first) setSearchMsg('Loading HUBs...');
+    const h = await loadHubs();
+    if (h) applyHubs(h);
+    if (first) setSearchMsg(h ? '' : 'Failed to load HUBs');
+}
+
+// ---------- Desenho da rota (sem a divisa entre regiões consecutivas) ----------
+function squareSides(lat, lng) {
+    return [
+        [-1, 0, [lat, lng],     [lat, lng + 1]],
+        [ 1, 0, [lat + 1, lng], [lat + 1, lng + 1]],
+        [ 0, -1, [lat, lng],    [lat + 1, lng]],
+        [ 0, 1, [lat, lng + 1], [lat + 1, lng + 1]]
+    ];
+}
+
+function redrawRoute() {
+    clearLayers(routeLayers);
+    const indexByKey = new Map();
+    route.forEach(function (p, i) { indexByKey.set(coordKey(p.lat, p.lng), i); });
+
+    route.forEach(function (p, i) {
+        const isEnd = (i === 0 || i === route.length - 1);
+        routeLayers.push(drawSquare(routeMap, p.lat, p.lng, isEnd ? ROUTE_END_FILL_STYLE : ROUTE_FILL_STYLE));
+        squareSides(p.lat, p.lng).forEach(function (s) {
+            const j = indexByKey.get(coordKey(p.lat + s[0], p.lng + s[1]));
+            if (!(j !== undefined && Math.abs(i - j) === 1)) {
+                routeLayers.push(L.polyline([s[2], s[3]], ROUTE_EDGE_STYLE).addTo(routeMap));
+            }
+        });
+    });
+}
+
+// ---------- Lista da rota ----------
+function populateRouteSelect() {
+    rLSelect.options.length = 0;
+    route.forEach(function (p) {
+        const key = coordKey(p.lat, p.lng);
+        const option = document.createElement('option');
+        option.value = p.lat + 'z' + p.lng;
+        option.textContent = knownNames.get(key) || (p.lng + ',' + p.lat);
+        rLSelect.appendChild(option);
+        if (!knownNames.has(key)) {
+            lookupRegion(p.lat, p.lng).then(function (name) {
+                if (name && option.isConnected) option.textContent = name;
+            });
+        }
+    });
+}
+
+function onRouteListPick() {
+    clearTooltip();
+    const p = route[rLSelect.selectedIndex];
+    if (p) goToCoord(p.lat, p.lng);
+}
+rLSelect.addEventListener('click', onRouteListPick);
+rLSelect.addEventListener('keyup', function (e) {
+    if (['ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].indexOf(e.key) !== -1) onRouteListPick();
+});
+
+function refreshRoute() {
+    redrawRoute();
+    populateRouteSelect();
+}
+
+// ---------- Lógica da rota ----------
+function addRouteCoord(lat, lng) {
+    const p = { lat: lat, lng: lng };
+    const idx = indexIn(route, lat, lng);
+
+    if (idx !== -1) {
+        if (idx === 0 || idx === route.length - 1) { route.splice(idx, 1); refreshRoute(); }
+        return;
+    }
+    if (route.length === 0) route.push(p);
+    else if (route.length === 1) {
+        if (isAdjacent(route[0], p)) route.push(p);
+        else route[0] = p;
+    } else if (isAdjacent(route[route.length - 1], p)) route.push(p);
+    else if (isAdjacent(route[0], p)) route.unshift(p);
+    else return;
+    refreshRoute();
+}
+
+function goToCoord(lat, lng) {
+    routeMap.setView(L.latLng(lat, lng));
+    selectRegion(lat, lng, knownNames.get(coordKey(lat, lng)));
+    if (!knownNames.has(coordKey(lat, lng))) {
+        lookupRegion(lat, lng).then(function (name) {
+            if (name && lastCoord && lastCoord.lat === lat && lastCoord.lng === lng) selectRegion(lat, lng, name);
+        });
+    }
+}
+
+function setFocusOnCoord(lat, lng) {
+    if (coordFocus) coordFocus.remove();
+    coordFocus = drawFocusSquare(routeMap, lat, lng);
+    lastCoord = { lat: lat, lng: lng };
+}
+
+// ---------- Tooltip e eventos do mapa ----------
+function clearTooltip() {
+    const open = [];
+    routeMap.eachLayer(function (l) { if (l instanceof L.Tooltip) open.push(l); });
+    open.forEach(function (t) { t.close(); });
+}
+
+// Tooltip do tile: nome (se conhecido), coordenadas x,y e tipo de HUB (se for um)
+function openTileTooltip(lat, lng, name) {
+    const content = document.createElement('div');
+    function line(text, bold, color) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        if (bold) d.style.fontWeight = 'bold';
+        if (color) d.style.color = color;
+        content.appendChild(d);
+    }
+    if (name) line(name, true);
+    line(lng + ',' + lat);
+    const hub = hubInfo.get(coordKey(lat, lng));
+    if (hub) {
+        if (hub.type === 'boosted') line('Boosted HUB ' + hub.multiplier.toFixed(1) + 'x', true, '#000080');
+        else line('Standard HUB', true, '#ff6600');
+    }
+    const tip = L.tooltip().setLatLng([lat + 0.5, lng]).setContent(content);
+    tip.openOn(routeMap);
+    tip.setOpacity(0.9);
+}
+
+function selectRegion(lat, lng, name) {
+    clearTooltip();
+    setFocusOnCoord(lat, lng);
+    openTileTooltip(lat, lng, name);
+}
+
+routeMap.on('click', function (e) {
+    const lat = parseInt(e.latlng.lat), lng = parseInt(e.latlng.lng);
+    selectRegion(lat, lng, knownNames.get(coordKey(lat, lng)));
+});
+
+routeMap.on('dblclick', async function (e) {
+    const lat = parseInt(e.latlng.lat), lng = parseInt(e.latlng.lng);
+    setFocusOnCoord(lat, lng);
+    if (indexIn(route, lat, lng) === -1 && !(await regionExists(lat, lng))) return;
+    addRouteCoord(lat, lng);
+});
+
+// ---------- Pesquisa de região (botão Go) ----------
+const sName = document.getElementById('sName');
+const sMsg = document.getElementById('sMsg');
+function setSearchMsg(text) { sMsg.textContent = text || ''; }
+
+async function searchRegion() {
+    const typed = sName.value.trim();
+    if (!typed) return;
+    clearTooltip();
+    setSearchMsg('Searching...');
+    const pos = await lookupRegionByName(typed);
+    if (!pos) {
+        setSearchMsg(pos === null ? 'Region not found' : 'Search failed, try again');
+        return;
+    }
+    const name = (await lookupRegion(pos.lat, pos.lng)) || typed;
+    routeMap.setView(L.latLng(pos.lat + 0.5, pos.lng + 0.5), routeMap.getZoom());
+    selectRegion(pos.lat, pos.lng, name);
+    sName.value = name;
+    setSearchMsg('');
+}
+
+sName.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); searchRegion(); }
+});
+document.getElementById('sGoBtn').addEventListener('click', searchRegion);
+
+// ---------- Envio do formulário ----------
+function submitForm() {
+    if (!httpInValid) {
+        alert('URL de destino (hiU) ausente ou inválida. Ela deve começar com https://');
+        return;
+    }
+    rLHidden.value = serializeList(route);
+    if (lastCoord) cHidden.value = lastCoord.lat + 'z' + lastCoord.lng;
+    form.submit();
+}
+form.addEventListener('submit', function (e) { e.preventDefault(); submitForm(); });
+document.getElementById('validate').addEventListener('click', submitForm);
+
+// ---------- Carga inicial ----------
+if (coordFromUrl) {
+    const c = coordFromUrl.split('z');
+    const lat = parseInt(c[0]), lng = parseInt(c[1]);
+    if (!isNaN(lat) && !isNaN(lng)) {
+        routeMap.setView(L.latLng(lat, lng), 7);
+        setFocusOnCoord(lat, lng);
+    }
+}
+
+route = parseList(routeListFromUrl);
+refreshRoute();
+refreshHubs(true);
+setInterval(refreshHubs, HUB_REFRESH_MS);
+</script>
+</body>
+</html>
