@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="sl.mapapi2.js"></script>
+<link rel="stylesheet" type="text/css" href="sl.mapapi2.css">
+<style>
+html, body { margin: 0; padding: 0; width: 1000px; height: 1000px; overflow: hidden; background-color: #1d475f; }
+div#map-container { position: absolute; top: 0; left: 0; width: 1000px; height: 1000px; }
+</style>
+</head>
+<body>
+
+<div id="map-container"></div>
+
+<script>
+/*
+ * Coordenadas: lat = eixo Y do SL, lng = eixo X do SL.
+ * LSL -> página (fragmento da URL, relido a cada hashchange):
+ *   #p=<y>z<x>          posição do avatar, metros globais (1 casa decimal)
+ *   &t=<n>              contador (força o hashchange)
+ *   &hiU=https://...    URL HTTP-in do LSL
+ *   &b=<y>z<x>~<rle>    restrições da região <y>z<x> (índices de região); RLE, 2 chars base64 por run
+ * Página -> LSL (GET em hiU, ver sendData): c=<y>z<x>  rL=<y>z<x>~<NSEW...>
+ */
+
+// ---------- Configuração ----------
+const ROUTE_EDGE_STYLE = { color: 'white', weight: 3, opacity: 1 };
+const ROUTE_FILL_STYLE = { stroke: false, fillColor: 'white', fillOpacity: 0.3 };
+const ROUTE_END_FILL_STYLE = { stroke: false, fillColor: '#90ee90', fillOpacity: 0.5 };
+const HUB_FILL_OPACITY = 0.7;
+const STANDARD_HUB_STYLE = { stroke: false, fillColor: '#ff6600', fillOpacity: HUB_FILL_OPACITY, interactive: false };
+const BOOSTED_HUB_STYLE = { stroke: false, fillColor: '#000080', fillOpacity: HUB_FILL_OPACITY, interactive: false };
+const ACCESS_STYLE = { stroke: false, fillColor: '#ff0000', fillOpacity: 0.35, interactive: false };
+const USER_MARKER_STYLE = { radius: 7, color: '#000', weight: 2, fillColor: '#fff', fillOpacity: 1, interactive: false };
+const HUB_API = 'https://gfn-server-1.onrender.com';
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const GRID = 64;   // amostras por eixo (4 m cada)
+
+// ---------- Mapa ----------
+const routeMap = new SLMap(document.getElementById('map-container'));
+routeMap.setView(L.latLng(1000, 1000), 7);
+routeMap.doubleClickZoom.disable();
+
+// ---------- Estado ----------
+let route = [];           // [{lat, lng}]
+let routeLayers = [];
+let hubLayers = [];
+let accessLayers = [];
+let coordFocus = null;
+let userMarker = null;
+let lastCoord = null;     // última região selecionada; vai no parâmetro c
+let httpInUrl = '';
+let lastB = '';
+let avatarRegion = null;
+
+// ---------- Utilidades ----------
+function coordKey(lat, lng) { return lat + ',' + lng; }
+function indexIn(list, lat, lng) { return list.findIndex(function (p) { return p.lat === lat && p.lng === lng; }); }
+function isAdjacent(a, b) { return Math.abs(a.lat - b.lat) + Math.abs(a.lng - b.lng) === 1; }
+function clearLayers(layers) { layers.forEach(function (l) { l.remove(); }); layers.length = 0; }
+
+// Rota compacta: "<lat>z<lng>~" + uma letra por passo (N=lat+1, S=lat-1, E=lng+1, W=lng-1)
+function serializeRoute() {
+    if (!route.length) return '';
+    let s = route[0].lat + 'z' + route[0].lng + '~';
+    for (let i = 1; i < route.length; i++) {
+        const dl = route[i].lat - route[i - 1].lat, dg = route[i].lng - route[i - 1].lng;
+        s += dl === 1 ? 'N' : dl === -1 ? 'S' : dg === 1 ? 'E' : 'W';
+    }
+    return s;
+}
+
+function drawSquare(map, lat, lng, opts) {
+    return L.polygon([[lat, lng], [lat, lng + 1], [lat + 1, lng + 1], [lat + 1, lng]], opts).addTo(map);
+}
+function drawFocusSquare(map, lat, lng) {
+    return L.polyline([[lat, lng], [lat, lng + 1], [lat + 1, lng + 1], [lat + 1, lng], [lat, lng]],
+        { color: 'white', weight: 3 }).addTo(map);
+}
+function raiseTop() {
+    if (coordFocus) coordFocus.bringToFront();
+    if (userMarker) userMarker.bringToFront();
+}
+
+// ---------- Consulta de região (Map API do SL, via JSONP serializado) ----------
+window.gotoSLURL = function () {};
+
+const CAP_BASE = $.sl.maps.config.capability_base_url + 'cap/0/';
+const CAP_COORDS_TO_NAME = CAP_BASE + 'b713fe80-283b-4585-af4d-a3b7d9a32492';
+const REGION_TIMEOUT_MS = 5000;
+const regionCache = new Map();   // "lat,lng" -> Promise<nome|null|undefined>
+let capQueue = Promise.resolve();
+
+function loadCap(url, varName) {
+    return new Promise(function (resolve) {
+        let done = false;
+        const script = document.createElement('script');
+        function finish(result) {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            script.remove();
+            resolve(result);
+        }
+        const timer = setTimeout(function () { finish(undefined); }, REGION_TIMEOUT_MS);
+        window[varName] = undefined;
+        script.onload = function () { finish({ value: window[varName] }); };
+        script.onerror = function () { finish(undefined); };
+        script.src = url;
+        document.body.appendChild(script);
+    });
+}
+
+// Resolve com o nome (existe), null (não existe) ou undefined (falha/timeout)
+function lookupRegion(lat, lng) {
+    const key = coordKey(lat, lng);
+    if (!regionCache.has(key)) {
+        const p = capQueue.then(function () {
+            return loadCap(CAP_COORDS_TO_NAME + '?var=slRegionName&grid_x=' + lng + '&grid_y=' + lat,
+                           'slRegionName').then(function (r) {
+                if (r === undefined) return undefined;
+                const n = r.value;
+                return (n && !n.error) ? n : null;
+            });
+        });
+        capQueue = p;
+        regionCache.set(key, p);
+        p.then(function (r) {
+            if (r === undefined) regionCache.delete(key);
+        });
+    }
+    return regionCache.get(key);
+}
+
+async function regionExists(lat, lng) { return !!(await lookupRegion(lat, lng)); }
+
+// ---------- HUBs (Standard = laranja, Boosted = azul navy), carregados só ao abrir ----------
+const hubInfo = new Map();   // "lat,lng" -> {type, name, multiplier, expires}
+
+async function fetchValue(id) {
+    try {
+        const res = await fetch(HUB_API + '/get?id=' + encodeURIComponent(id));
+        if (!res.ok) return '';
+        const data = await res.json();
+        return data.value !== undefined ? data.value : (typeof data === 'string' ? data : '');
+    } catch (e) { return ''; }
+}
+
+// Devolve { standardHubs: [...], boostedHubs: [...] } ou null se a API não respondeu
+async function loadHubs() {
+    const serversRaw = await fetchValue('SERVERS');
+    const continents = serversRaw ? serversRaw.split('ç').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    if (!continents.length) return null;
+
+    const hubs = [];
+    await Promise.all(continents.map(async function (cont) {
+        const res = await Promise.all([fetchValue(cont)].concat([1, 2, 3, 4, 5].map(function (i) { return fetchValue(cont + '_NAMES_' + i); })));
+        const items = res[0] ? res[0].split('ç').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+        const names = [];
+        res.slice(1).forEach(function (raw) {
+            if (raw) raw.split('ç').forEach(function (n) { names.push(n.trim()); });
+        });
+        items.forEach(function (item, i) {
+            const p = item.split('#');
+            const v = (p[1] || '<128,128,20>').replace(/[<>]/g, '').split(',').map(function (c) { return parseFloat(c) || 0; });
+            const n = names[i];
+            hubs.push({
+                uuid: (p[0] || '').trim().toLowerCase(),
+                lat: Math.floor(v[1] / 256),   // y global / 256
+                lng: Math.floor(v[0] / 256),   // x global / 256
+                name: (n && n !== 'NULL') ? n : null
+            });
+        });
+    }));
+
+    const raw = await Promise.all([fetchValue('BHUB'), fetchValue('MHUB'), fetchValue('THUB')]);
+    const bhub = raw[0] ? raw[0].split(',') : [];
+    const mhub = raw[1] ? raw[1].split(',') : [];
+    const thub = raw[2] ? raw[2].split(',') : [];
+    const boost = {};
+    bhub.forEach(function (u, i) {
+        const id = u.trim().toLowerCase();
+        if (id) boost[id] = {
+            multiplier: parseFloat((mhub[i] || '1').replace(/x/gi, '')) || 1,
+            expires: parseInt(thub[i] || '0', 10)    // 0 = sem limite
+        };
+    });
+
+    const out = { standardHubs: [], boostedHubs: [] };
+    hubs.forEach(function (h) {
+        const b = boost[h.uuid];
+        if (b) out.boostedHubs.push(Object.assign({}, h, b));
+        else out.standardHubs.push(h);
+    });
+    return out;
+}
+
+function applyHubs(h) {
+    hubInfo.clear();
+    h.standardHubs.forEach(function (x) { hubInfo.set(coordKey(x.lat, x.lng), Object.assign({ type: 'standard' }, x)); });
+    h.boostedHubs.forEach(function (x) { hubInfo.set(coordKey(x.lat, x.lng), Object.assign({ type: 'boosted' }, x)); });
+
+    clearLayers(hubLayers);
+    hubInfo.forEach(function (x) {
+        hubLayers.push(drawSquare(routeMap, x.lat, x.lng, x.type === 'boosted' ? BOOSTED_HUB_STYLE : STANDARD_HUB_STYLE));
+    });
+    accessLayers.forEach(function (l) { l.bringToBack(); });   // restrições ficam abaixo dos HUBs
+    redrawRoute();                                            // mantém a rota acima dos HUBs
+}
+
+// ---------- Restrições da região atual (b) ----------
+// Sequência: índice = ix*64 + iy; ix = X (lng), iy = Y (lat). Runs alternam 0/1, a primeira é de zeros.
+function drawAccess(b) {
+    const m = b.match(/^(-?\d+)z(-?\d+)~([A-Za-z0-9_-]*)$/);
+    if (!m) return;
+    const lat0 = parseInt(m[1]), lng0 = parseInt(m[2]);
+    // só desenha se os dados forem da região onde o avatar está
+    if (!avatarRegion || avatarRegion.lat !== lat0 || avatarRegion.lng !== lng0) return;
+    lastB = b;
+    clearLayers(accessLayers);
+
+    // runs de 1 -> segmentos verticais [iy0, iy1] por coluna
+    const cols = [];
+    for (let i = 0; i < GRID; i++) cols.push([]);
+    let idx = 0, bit = 0;
+    for (let i = 0; i + 1 < m[3].length; i += 2) {
+        const n = B64.indexOf(m[3][i]) * 64 + B64.indexOf(m[3][i + 1]);
+        if (bit) {
+            let k = idx;
+            const end = idx + n;
+            while (k < end) {
+                const ix = k >> 6, last = Math.min(end - 1, ix * GRID + GRID - 1);
+                if (ix < GRID) cols[ix].push([k & 63, last & 63]);
+                k = last + 1;
+            }
+        }
+        idx += n;
+        bit ^= 1;
+    }
+
+    // une colunas vizinhas com o mesmo segmento em um único retângulo
+    const open = new Map();
+    function emit(x0, x1, s) {
+        accessLayers.push(L.polygon([
+            [lat0 + s[0] / GRID, lng0 + x0 / GRID], [lat0 + s[0] / GRID, lng0 + (x1 + 1) / GRID],
+            [lat0 + (s[1] + 1) / GRID, lng0 + (x1 + 1) / GRID], [lat0 + (s[1] + 1) / GRID, lng0 + x0 / GRID]
+        ], ACCESS_STYLE).addTo(routeMap));
+    }
+    for (let ix = 0; ix <= GRID; ix++) {
+        const cur = new Map();
+        (cols[ix] || []).forEach(function (s) { cur.set(s[0] + '-' + s[1], s); });
+        open.forEach(function (r, k) { if (!cur.has(k)) { emit(r.x0, ix - 1, r.s); open.delete(k); } });
+        cur.forEach(function (s, k) { if (!open.has(k)) open.set(k, { x0: ix, s: s }); });
+    }
+    accessLayers.forEach(function (l) { l.bringToBack(); });
+}
+
+// ---------- Desenho da rota (sem a divisa entre regiões consecutivas) ----------
+function squareSides(lat, lng) {
+    return [
+        [-1, 0, [lat, lng],     [lat, lng + 1]],
+        [ 1, 0, [lat + 1, lng], [lat + 1, lng + 1]],
+        [ 0, -1, [lat, lng],    [lat + 1, lng]],
+        [ 0, 1, [lat, lng + 1], [lat + 1, lng + 1]]
+    ];
+}
+
+function redrawRoute() {
+    clearLayers(routeLayers);
+    const indexByKey = new Map();
+    route.forEach(function (p, i) { indexByKey.set(coordKey(p.lat, p.lng), i); });
+
+    route.forEach(function (p, i) {
+        const isEnd = (i === 0 || i === route.length - 1);
+        routeLayers.push(drawSquare(routeMap, p.lat, p.lng, isEnd ? ROUTE_END_FILL_STYLE : ROUTE_FILL_STYLE));
+        squareSides(p.lat, p.lng).forEach(function (s) {
+            const j = indexByKey.get(coordKey(p.lat + s[0], p.lng + s[1]));
+            if (!(j !== undefined && Math.abs(i - j) === 1)) {
+                routeLayers.push(L.polyline([s[2], s[3]], ROUTE_EDGE_STYLE).addTo(routeMap));
+            }
+        });
+    });
+    raiseTop();
+}
+
+// ---------- Lógica da rota ----------
+function addRouteCoord(lat, lng) {
+    const p = { lat: lat, lng: lng };
+    const idx = indexIn(route, lat, lng);
+
+    if (idx !== -1) {
+        if (idx === 0 || idx === route.length - 1) { route.splice(idx, 1); redrawRoute(); sendData(); }
+        return;
+    }
+    if (route.length === 0) route.push(p);
+    else if (route.length === 1) {
+        if (isAdjacent(route[0], p)) route.push(p);
+        else route[0] = p;
+    } else if (isAdjacent(route[route.length - 1], p)) route.push(p);
+    else if (isAdjacent(route[0], p)) route.unshift(p);
+    else return;
+    redrawRoute();
+    sendData();
+}
+
+function setFocusOnCoord(lat, lng) {
+    if (coordFocus) coordFocus.remove();
+    coordFocus = drawFocusSquare(routeMap, lat, lng);
+    lastCoord = { lat: lat, lng: lng };
+    raiseTop();
+}
+
+// ---------- Rota consumida pelo avatar ----------
+// A rota nunca se divide: uma região só sai quando o avatar entra em outra região da rota.
+function trimRoute(prev, cur) {
+    const i = indexIn(route, prev.lat, prev.lng);
+    if (i === -1) return;                                  // veio de fora da rota: nada a cortar
+    const j = indexIn(route, cur.lat, cur.lng);
+    if (j > i) route = route.slice(j);                     // avançou: remove o que ficou para trás
+    else if (j !== -1 && j < i) route = route.slice(0, j + 1);   // voltou: remove o trecho à frente
+    else if (j === -1 && route.length === 1) route = [];   // saiu do destino (única região que restava)
+    else return;                                           // saiu da rota no meio: mantém
+    redrawRoute();
+    sendData();
+}
+
+// ---------- Eventos do mapa ----------
+routeMap.on('click', function (e) {
+    setFocusOnCoord(parseInt(e.latlng.lat), parseInt(e.latlng.lng));
+});
+
+routeMap.on('dblclick', async function (e) {
+    const lat = parseInt(e.latlng.lat), lng = parseInt(e.latlng.lng);
+    setFocusOnCoord(lat, lng);
+    if (indexIn(route, lat, lng) === -1 && !(await regionExists(lat, lng))) return;
+    addRouteCoord(lat, lng);
+});
+
+// ---------- Envio ao LSL (sem navegar, para não recarregar a página nem perder o zoom) ----------
+function sendData() {
+    if (!/^https:\/\//i.test(httpInUrl)) return;
+    const c = lastCoord ? lastCoord.lat + 'z' + lastCoord.lng : '';
+    fetch(httpInUrl + '?c=' + encodeURIComponent(c) + '&rL=' + encodeURIComponent(serializeRoute()),
+          { mode: 'no-cors' }).catch(function () {});
+}
+window.sendData = sendData;
+
+// ---------- Fragmento vindo do LSL: carga inicial e cada atualização ----------
+function centerOnMeters(gy, gx) {
+    const ll = L.latLng(gy / 256, gx / 256);
+    routeMap.setView(ll, routeMap.getZoom(), { animate: false });   // mantém o zoom, sem animação
+    setFocusOnCoord(Math.floor(gy / 256), Math.floor(gx / 256));
+    if (userMarker) userMarker.setLatLng(ll);
+    else userMarker = L.circleMarker(ll, USER_MARKER_STYLE).addTo(routeMap);
+    raiseTop();
+}
+
+function applyHash() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    const hu = h.get('hiU');
+    if (hu) httpInUrl = hu;
+    const m = (h.get('p') || '').match(/^(-?\d+(?:\.\d+)?)z(-?\d+(?:\.\d+)?)$/);
+    if (m) {
+        const gy = parseFloat(m[1]), gx = parseFloat(m[2]);
+        const prev = avatarRegion;
+        avatarRegion = { lat: Math.floor(gy / 256), lng: Math.floor(gx / 256) };
+        if (prev && (prev.lat !== avatarRegion.lat || prev.lng !== avatarRegion.lng)) trimRoute(prev, avatarRegion);
+        centerOnMeters(gy, gx);
+    }
+    const b = h.get('b');
+    if (b && b !== lastB) drawAccess(b);
+}
+window.addEventListener('hashchange', applyHash);
+
+// ---------- Carga inicial ----------
+applyHash();
+loadHubs().then(function (h) { if (h) applyHubs(h); });   // uma única vez, ao abrir
+</script>
+</body>
+</html>
