@@ -406,13 +406,30 @@ routeMap.on('dblclick', async function (e) {
 });
 
 // ---------- Envio ao LSL (sem navegar, para não recarregar a página nem perder o zoom) ----------
+// Um único pedido em andamento por vez; o estado mais recente é reenviado quando o anterior termina.
+// Pedidos idênticos ao último enviado são descartados (c não entra na comparação: o LSL ainda não o usa).
+let sending = false, resend = false, lastSentKey = '';
 function sendData() {
     if (!/^https:\/\//i.test(httpInUrl)) return;
+    const rl = serializeRoute();
+    const key = httpInUrl + '\n' + hubSel + '\n' + rl;
+    if (key === lastSentKey) return;               // nada novo para o LSL
+    if (sending) { resend = true; return; }        // já há um pedido em voo: reenvia depois, com o estado mais recente
+    sending = true; resend = false; lastSentKey = key;
+
     const c = lastCoord ? lastCoord.lat + 'z' + lastCoord.lng : '';
+    const ctrl = new AbortController();
+    const timer = setTimeout(function () { ctrl.abort(); }, 4000);
     fetch(httpInUrl + '?c=' + encodeURIComponent(c)
                     + '&h=' + encodeURIComponent(hubSel)
-                    + '&rL=' + encodeURIComponent(serializeRoute()),
-          { mode: 'no-cors' }).catch(function () {});
+                    + '&rL=' + encodeURIComponent(rl),
+          { mode: 'no-cors', signal: ctrl.signal })
+        .catch(function () { lastSentKey = ''; })  // falhou: o próximo envio tenta de novo
+        .finally(function () {
+            clearTimeout(timer);
+            sending = false;
+            if (resend) sendData();
+        });
 }
 window.sendData = sendData;
 
