@@ -138,7 +138,7 @@ function lookupRegion(lat, lng) {
 async function regionExists(lat, lng) { return !!(await lookupRegion(lat, lng)); }
 
 // ---------- HUBs (GTFO) ----------
-const HUB_API = 'https://gtfo.fixedbit.com/api/hubs';
+const HUB_API = 'hubs.json';   // cópia local (mesma origem), atualizada pelo GitHub Actions; o CORS do fixedbit bloqueia o fetch direto
 const HUB_CACHE_KEY = 'gtfoHubsCache';
 const HUB_CACHE_TTL_MS = 60 * 60 * 1000;   // 1 h
 const SHOW_DROPZONES = true;
