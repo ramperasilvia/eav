@@ -83,57 +83,49 @@ function raiseTop() {
     if (userMarker) userMarker.bringToFront();
 }
 
-// ---------- Consulta de região (Map API do SL, via JSONP serializado) ----------
-window.gotoSLURL = function () {};
+// ---------- Existência de região (tile do mapa) ----------
+// Imagens não sofrem o bloqueio de MIME nem CORS; região inexistente não tem tile (erro no onerror).
+const TILE_BASE = 'https://secondlife-maps-cdn.akamaized.net/';   // confira na aba Network (ver nota abaixo)
+const TILE_TIMEOUT_MS = 5000;
+const regionCache = new Map();   // "lat,lng" -> Promise<true|false|undefined>
 
-const CAP_BASE = $.sl.maps.config.capability_base_url + 'cap/0/';
-const CAP_COORDS_TO_NAME = CAP_BASE + 'b713fe80-283b-4585-af4d-a3b7d9a32492';
-const REGION_TIMEOUT_MS = 5000;
-const regionCache = new Map();   // "lat,lng" -> Promise<nome|null|undefined>
-let capQueue = Promise.resolve();
+// map-1 = zoom máximo (1 tile = 1 região); x = lng, y = lat
+function tileUrl(lat, lng) {
+    return TILE_BASE + 'map-1-' + lng + '-' + lat + '-objects.jpg';
+}
 
-function loadCap(url, varName) {
+// Resolve true (tile existe), false (tile não existe) ou undefined (timeout)
+function checkTile(lat, lng) {
     return new Promise(function (resolve) {
+        const img = new Image();
         let done = false;
-        const script = document.createElement('script');
         function finish(result) {
             if (done) return;
             done = true;
             clearTimeout(timer);
-            script.remove();
+            img.onload = img.onerror = null;
             resolve(result);
         }
-        const timer = setTimeout(function () { finish(undefined); }, REGION_TIMEOUT_MS);
-        window[varName] = undefined;
-        script.onload = function () { finish({ value: window[varName] }); };
-        script.onerror = function () { finish(undefined); };
-        script.src = url;
-        document.body.appendChild(script);
+        const timer = setTimeout(function () { finish(undefined); }, TILE_TIMEOUT_MS);
+        img.onload = function () { finish(true); };
+        img.onerror = function () { finish(false); };
+        img.src = tileUrl(lat, lng);
     });
 }
 
-// Resolve com o nome (existe), null (não existe) ou undefined (falha/timeout)
 function lookupRegion(lat, lng) {
     const key = coordKey(lat, lng);
     if (!regionCache.has(key)) {
-        const p = capQueue.then(function () {
-            return loadCap(CAP_COORDS_TO_NAME + '?var=slRegionName&grid_x=' + lng + '&grid_y=' + lat,
-                           'slRegionName').then(function (r) {
-                if (r === undefined) return undefined;
-                const n = r.value;
-                return (n && !n.error) ? n : null;
-            });
-        });
-        capQueue = p;
+        const p = checkTile(lat, lng);
         regionCache.set(key, p);
         p.then(function (r) {
-            if (r === undefined) regionCache.delete(key);
+            if (r === undefined) regionCache.delete(key);   // timeout: tenta de novo na próxima vez
         });
     }
     return regionCache.get(key);
 }
 
-async function regionExists(lat, lng) { return !!(await lookupRegion(lat, lng)); }
+async function regionExists(lat, lng) { return (await lookupRegion(lat, lng)) === true; }
 
 // ---------- HUBs (Standard = laranja, Boosted = azul navy), carregados só ao abrir ----------
 const hubInfo = new Map();   // "lat,lng" -> {type, name, multiplier, expires}
