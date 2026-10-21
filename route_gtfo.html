@@ -150,13 +150,13 @@ const MODE_ABBR = { air: 'A', heli: 'H', water: 'W', seaplane: 'Sp', road: 'Rd',
 const SIZE_RANK = { S: 1, M: 2, L: 3 };
 
 const HUB_STYLES = {
-    standard: { stroke: false, fillColor: '#b7b7b7', fillOpacity: HUB_FILL_OPACITY, interactive: false },
-    dropzone: { stroke: false, fillColor: '#48001e', fillOpacity: HUB_FILL_OPACITY, interactive: false }
+    standard: { stroke: false, fillColor: '#ff6600', fillOpacity: HUB_FILL_OPACITY, interactive: false },
+    dropzone: { stroke: false, fillColor: '#9b59b6', fillOpacity: HUB_FILL_OPACITY, interactive: false }
 };
 
 let hubGroups = [];                 // todas as regiões com hub: {lat, lng, modeMask, hubs[]}
 const hubByCoord = new Map();       // "lat,lng" -> grupo (todas as regiões com hub, visíveis ou não)
-const hubLayerMap = new Map();      // "lat,lng" -> camada desenhada
+const hubPolys = { standard: null, dropzone: null };   // uma camada (vários anéis) por tipo, em vez de 1 polígono por região
 let activeMask = MASK_ALL;          // padrão: todos os modos ativos; o LSL muda via m
 let hubSel = '';                    // texto do hub da última região CLICADA (vai em h)
 let clickTimer = null;
@@ -214,32 +214,28 @@ function isHubVisible(g) {
     return (g.modeMask & activeMask) !== 0;            // OU entre os botões ligados
 }
 
-// Só adiciona/remove o que mudou, sem redesenhar tudo
+// Desenha todos os quadrados visíveis de cada tipo num único polígono (poucos elementos no DOM = pan/zoom fluidos)
 function renderHubs() {
-    let added = false;
+    const rings = { standard: [], dropzone: [] };
     hubGroups.forEach(function (g) {
-        const key = coordKey(g.lat, g.lng);
-        const layer = hubLayerMap.get(key);
-        if (isHubVisible(g)) {
-            if (!layer) {
-                hubLayerMap.set(key, drawSquare(routeMap, g.lat, g.lng,
-                    g.modeMask ? HUB_STYLES.standard : HUB_STYLES.dropzone));
-                added = true;
-            }
-        } else if (layer) {
-            layer.remove();
-            hubLayerMap.delete(key);
+        if (!isHubVisible(g)) return;
+        rings[g.modeMask ? 'standard' : 'dropzone'].push(
+            [[g.lat, g.lng], [g.lat, g.lng + 1], [g.lat + 1, g.lng + 1], [g.lat + 1, g.lng]]);
+    });
+    ['standard', 'dropzone'].forEach(function (t) {
+        if (!rings[t].length) {
+            if (hubPolys[t]) { hubPolys[t].remove(); hubPolys[t] = null; }
+        } else if (hubPolys[t]) {
+            hubPolys[t].setLatLngs(rings[t]);
+        } else {
+            hubPolys[t] = L.polygon(rings[t], HUB_STYLES[t]).addTo(routeMap);
         }
     });
-    if (added) {
-        accessLayers.forEach(function (l) { l.bringToBack(); });   // restrições abaixo dos HUBs
-        redrawRoute();                                            // rota acima dos HUBs
-    }
+    accessLayers.forEach(function (l) { l.bringToBack(); });   // restrições abaixo dos HUBs
+    redrawRoute();                                            // rota acima dos HUBs
 }
 
 function applyHubs(groups) {
-    hubLayerMap.forEach(function (l) { l.remove(); });
-    hubLayerMap.clear();
     hubGroups = groups;
     hubByCoord.clear();
     groups.forEach(function (g) { hubByCoord.set(coordKey(g.lat, g.lng), g); });
@@ -421,9 +417,15 @@ function sendData() {
 window.sendData = sendData;
 
 // ---------- Fragmento vindo do LSL: carga inicial e cada atualização ----------
+// setView no meio de um zoom ou arrasto cancela o gesto; enquanto o usuário interage, não recentraliza
+let interactingSince = 0;
+['zoomstart', 'dragstart'].forEach(function (ev) { routeMap.on(ev, function () { interactingSince = Date.now(); }); });
+['zoomend', 'dragend'].forEach(function (ev) { routeMap.on(ev, function () { interactingSince = 0; }); });
+function isInteracting() { return interactingSince && Date.now() - interactingSince < 2000; }
+
 function centerOnMeters(gy, gx) {
     const ll = L.latLng(gy / 256, gx / 256);
-    routeMap.setView(ll, routeMap.getZoom(), { animate: false });   // mantém o zoom, sem animação
+    if (!isInteracting()) routeMap.setView(ll, routeMap.getZoom(), { animate: false });   // mantém o zoom, sem animação
     setFocusOnCoord(Math.floor(gy / 256), Math.floor(gx / 256));
     if (userMarker) userMarker.setLatLng(ll);
     else userMarker = L.circleMarker(ll, USER_MARKER_STYLE).addTo(routeMap);
